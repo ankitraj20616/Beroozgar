@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "beroozgar"
+version = "0.1.0"
+description = ""
+authors = ["ankitraj20616 <ankitrajthakur803@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.40"}
+asyncpg = "^0.30.0"
+psycopg2 = "^2.9.10"
+dotenv = "^0.9.9"
+pydantic-settings = "^2.8.1"
+pydantic = {extras = ["email"], version = "^2.11.3"}
+pkginfo = "^1.12.1.2"
+sendgrid = "^6.11.0"
+pyjwt = "^2.10.1"
+python-multipart = "^0.0.20"
+pdfplumber = "^0.11.7"
+scikit-learn = "^1.7.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
