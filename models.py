@@ -104,4 +104,10 @@ class Notification(Base):
     user = relationship("User", backref= "notifications")
     job = relationship("Job", backref= "notifications")
 
-    
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    MessageID = Column(Integer, primary_key=True, index=True)
+    SenderEmail = Column(String, nullable=False)
+    ReceiverEmail = Column(String, nullable=False)
+    Message = Column(String, nullable=False)
+    Timestamp = Column(DateTime(timezone= True), server_default= func.now())
