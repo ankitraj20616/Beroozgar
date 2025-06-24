@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Response, Request, File, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification
+from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
 from schemas import UserLogin, RecruiterCreate, JobCreate
-from database import get_db
+from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification
 from pydantic import EmailStr
@@ -15,6 +15,11 @@ from io import BytesIO
 
 router = APIRouter()
 authentication = JWTAuth()
+
+
+
+
+
 
 @router.post("/userSignup")
 async def user_sign_up(
@@ -200,7 +205,7 @@ def recent_jobs(limit: int = 10, db: Session = Depends(get_db)):
 
 
 @router.post("/apply/{job_id}")
-def apply_for_job(job_id: int, user_email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+async def apply_for_job(job_id: int, user_email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
     user = db.query(User).filter(User.Email == user_email).first()
     if not user:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "User not found.")
@@ -232,6 +237,14 @@ def apply_for_job(job_id: int, user_email: str= Depends(check_who_loged_in), db:
     
     create_notification(message= notification_message, user_id= user.UserID, job_id= application.JobID, db= db)
     notification_sender(user_email, notification_message)
+    await send_ws_notification(user_email, notification_message)
+
+    recruiter = db.query(Recruiter).filter(Recruiter.RecruiterID == job.RecruiterID).first()
+    if recruiter:
+        recruiter_notification = f"New application received for your job '{job.Title}'"
+        await send_ws_notification(recruiter.Email, recruiter_notification)
+
+
     return {
         "message": "Application submitted successfully",
         "score": score,
@@ -281,7 +294,7 @@ def get_applications_for_job(job_id: int, recruiter_email: str= Depends(check_wh
 
 
 @router.post("/schedule-interview")
-def schedule_interview(application_id: int, date: str, mode: str, recruiter_email: str= Depends(check_who_loged_in), db: Session = Depends(get_db)):
+async def schedule_interview(application_id: int, date: str, mode: str, recruiter_email: str= Depends(check_who_loged_in), db: Session = Depends(get_db)):
     recruiter = db.query(Recruiter).filter(Recruiter.Email == recruiter_email).first()
     if not recruiter:
         raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Recruiter not found.")
@@ -301,13 +314,16 @@ def schedule_interview(application_id: int, date: str, mode: str, recruiter_emai
     db.refresh(interview)
 
     candidate = db.query(User).filter(User.UserID == is_valid_application_id.UserID).first()
+    if candidate:
+        notification_message_for_candidate = f"Interview scheduled on {date} via {mode} for Job ID {is_valid_application_id.JobID}'" 
+        notification_sender(candidate.Email, notification_message_for_candidate)
+        create_notification(message= notification_message_for_candidate, user_id= candidate.UserID, job_id= is_valid_application_id.JobID, db= db)
+        await send_ws_notification(candidate.Email, notification_message_for_candidate)
 
-    notification_message_for_candidate = f"Interview scheduled on {date} via {mode} for Job ID {is_valid_application_id.JobID}'" 
-    notification_sender(candidate.Email, notification_message_for_candidate)
-    create_notification(message= notification_message_for_candidate, user_id= candidate.UserID, job_id= is_valid_application_id.JobID, db= db)
     notification_message_for_recruiter = f"Interview scheduled with candidate ID {is_valid_application_id.UserID}"
     notification_sender(recruiter_email, notification_message_for_recruiter)
     create_notification(message= notification_message_for_recruiter, user_id= recruiter.RecruiterID, job_id= is_valid_application_id.JobID, db= db)
+    await send_ws_notification(recruiter.Email, notification_message_for_recruiter)
 
 
     return {"message": "Interview scheduled"}
@@ -351,3 +367,71 @@ def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
     notification.IsRead = True
     db.commit()
     return {"message": f"{notification_id} Notification marked as read"}
+
+
+# key-> email, value-> websocket object
+active_websocket_connections = {}
+
+@router.websocket("/ws")
+async def create_websocket_connection(websocket: WebSocket, email: str= Depends(check_who_loged_in)):
+    await websocket.accept()
+    active_websocket_connections[email] = websocket
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        del active_websocket_connections[email]
+
+async def send_ws_notification(email:str, message: str):
+    websocket: WebSocket = active_websocket_connections.get(email)
+    if websocket:
+        await websocket.send_text(message)
+
+
+@router.websocket("/ws/chat")
+async def websocket_receive_chat(websocket: WebSocket, email: str= Depends(check_who_loged_in)):
+    await websocket.accept()
+    active_websocket_connections[email] = websocket
+    try:
+        while True:
+            data = await websocket.receive_json()
+            receiver = data.get("to")
+            message = data.get("message")
+
+            with get_db_sync() as db:
+                chat_message = ChatMessage(
+                    SenderEmail = email,
+                    ReceiverEmail = receiver,
+                    Message = message
+                )
+
+                db.add(chat_message)
+                db.commit()
+
+            if receiver == email:
+                await websocket.send_json({"error": "You cannot send message to yourself."})
+                continue
+            if not receiver or not message:
+                await websocket.send_json({"error": "Invalid chat message format."})
+                continue
+            if receiver in active_websocket_connections:
+                await active_websocket_connections[receiver].send_json({
+                    "from": email,
+                    "message": message
+                })
+            
+
+    except WebSocketDisconnect:
+        del active_websocket_connections[email]
+
+
+@router.get("/chat-history")
+def get_chat_history(with_email: str, user_email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    messages = db.query(ChatMessage).filter(
+        ((ChatMessage.SenderEmail == user_email) & (ChatMessage.ReceiverEmail == with_email)) |
+        ((ChatMessage.SenderEmail == with_email) & (ChatMessage.ReceiverEmail == user_email))
+    ).order_by(ChatMessage.Timestamp.asc()).all()
+
+    return [{"from": msg.SenderEmail, "to": msg.ReceiverEmail, "message": msg.Message, "timestamp": msg.created_at} for msg in messages]
+
+
