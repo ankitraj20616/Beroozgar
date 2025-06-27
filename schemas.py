@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import date
 
@@ -13,17 +13,19 @@ class UserBase(BaseModel):
 
 class UserRead(UserBase):
     user_id: int
-    class Config:
+    model_config = ConfigDict(
         from_attributes = True
+    )
 
 class UserLogin(BaseModel):
     email: EmailStr
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "email": "Enter your registered email."
             }
         }
+    )
 
 class OtpVerifySchema(BaseModel):
     email: EmailStr
@@ -37,7 +39,7 @@ class RecruiterBase(BaseModel):
 
 class RecruiterCreate(RecruiterBase):
     pass
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "name": "Name of recruiter",
@@ -45,12 +47,14 @@ class RecruiterCreate(RecruiterBase):
                 "company": "Company of recruiter",
                 "phone": "Phone number of recruiter"
             }
-        }        
+        }
+    )      
 
 class RecruiterRead(RecruiterBase):
     recruiter_id: int
-    class Config:
+    model_config = ConfigDict(
         from_attributes = True
+    )
 
 class JobBase(BaseModel):
     title: str
@@ -64,7 +68,7 @@ class JobBase(BaseModel):
 
 class JobCreate(JobBase):
     pass
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "title": "Title of job",
@@ -77,12 +81,14 @@ class JobCreate(JobBase):
                 
             }
         }
+    )
 
 class JobRead(JobBase):
     job_id: int
 
-    class Config:
+    model_config = ConfigDict(
         from_attributes = True
+    )
 
 
 class ApplicationBase(BaseModel):
@@ -94,7 +100,7 @@ class ApplicationBase(BaseModel):
 
 class ApplicationCreate(ApplicationBase):
     pass
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "user_id": "User id of this application",
@@ -104,12 +110,12 @@ class ApplicationCreate(ApplicationBase):
                 "status": "Status of this application"
             }
         }
+    )
 
 class ApplicationRead(ApplicationBase):
     application_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes = True)
 
 
 class InterviewBase(BaseModel):
@@ -121,7 +127,7 @@ class InterviewBase(BaseModel):
 
 class InterviewCreate(InterviewBase):
     pass
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "application_id": "Application id of the applied application",
@@ -131,12 +137,12 @@ class InterviewCreate(InterviewBase):
                 "status": "Status of the interview"
             }
         }
+    )
 
 class InterviewRead(InterviewBase):
     interview_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes = True)
 
 class AIModelBase(BaseModel):
     version: str
@@ -146,7 +152,7 @@ class AIModelBase(BaseModel):
 class AIModelCreate(AIModelBase):
     pass
 
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "version": "Version of AI model used",
@@ -154,9 +160,9 @@ class AIModelCreate(AIModelBase):
                 "accuracy": "Accuracy provided by the AI model used" 
             }
         }
+    )
 
 class AIModelRead(AIModelBase):
     model_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes = True)
