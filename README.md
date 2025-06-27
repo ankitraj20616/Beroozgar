@@ -1,143 +1,113 @@
-# 💼 Beroozgar - Job Portal API (FastAPI Backend)
+# Beroozgar 🚀
 
-This is a modern backend API for a **Job Portal** where users can:
-- Register and log in with OTP-based authentication
-- Upload resumes and apply to jobs
-- Get AI-powered resume scoring
-- Receive real-time interview notifications
-- Chat with recruiters via WebSocket
-
-Recruiters can:
-- Post jobs
-- View applicants
-- Schedule interviews
-- Chat with candidates
+A modular, FastAPI-powered backend for a job portal platform, supporting user/recruiter signup and authentication, job management, applications, notifications, and real-time chat/interview scheduling.
 
 ---
 
-## 📦 Tech Stack
+## 📦 Key Features
 
-- **Backend**: [FastAPI](https://fastapi.tiangolo.com/)
-- **Database**: PostgreSQL / MySQL (via SQLAlchemy ORM)
-- **Authentication**: JWT (set via HTTP-only cookies)
-- **Realtime Communication**: WebSockets
-- **Resume Parsing**: `pdfminer` / custom parser
-- **Email OTP**: SMTP with Gmail
-- **Notification System**: In-app & WebSocket-based
-
----
-
-## 🚀 Features
-
-### 👤 User Features
-- Signup with resume upload
-- Login with Gmail OTP
-- Apply for jobs with AI resume matching
-- View applied jobs
-- Chat with recruiters
-- View interview notifications
-
-### 🧑‍💼 Recruiter Features
-- Recruiter signup/login
-- Post and manage jobs
-- View applicants
-- Schedule interviews
-- Chat with users
-- Get notified of applications
-
-### 💬 Real-Time Chat & Notification
-- WebSocket-based chat for user ↔ recruiter
-- Notification on:
-  - Job application submission
-  - Interview schedule
-  - Real-time delivery using `WebSocket`
+- 🧑‍💻 **User & Recruiter Onboarding**: Secure multipart form signup with resume upload.
+- ✉️ **OTP Login**: Email-based login for users with one-time-password tokens.
+- 🔒 **JWT Authentication**: Cookie-based JWT handling, protected routes.
+- 💼 **Job Management**: Recruiters post jobs; users can apply, scored by AI.
+- 🧠 **Resume Scoring**: TF-IDF resume matching against job descriptions/skills.
+- 🔔 **Notifications**: Email and in-app notifications for events.
+- 🎙️ **Interview Scheduling**: Recruiters can schedule & notify candidates.
+- 💬 **Real-time Chat**: Users and recruiters chat via WebSockets.
+- 🧪 **Automated Testing**: End-to-end coverage using `pytest` & mocks.
 
 ---
 
-## 🔐 Auth Flow
+## 🌐 Project Structure
 
-- OTP login (sent via email)
-- On OTP verification:
-  - JWT token generated and set in secure cookie
-- Auth validated in:
-  - Routes
-  - WebSocket connections
-
----
-
-## 📁 Project Structure
-
-beroozgar/
-├── main.py # FastAPI app instance
-├── routers.py # All API & WebSocket routes
+Beroozgar/
+├── auth.py # JWT token management
+├── config.py # Env-based settings using Pydantic
+├── database.py # SQLAlchemy DB setup, session management
+├── main.py # FastAPI app initialization + DB creation
 ├── models.py # SQLAlchemy ORM models
-├── schemas.py # Pydantic request schemas
-├── auth.py # JWT utilities
-├── database.py # DB session handling
-├── utils.py # OTP mail, resume parsing, etc.
-├── config.py # Environment variables
-└── requirements.txt # Project dependencies
+├── routers.py # API endpoints & WebSocket logic
+├── schemas.py # Pydantic models for validation
+├── utils.py # Helpers: OTP, scoring, email, notifications
+├── tests/
+│ ├── conftest.py # Test fixtures
+│ └── test_apis.py # Integration & route tests
+├── .env.example # Env var template
+├── pyproject.toml # Poetry config
+├── poetry.lock # Locked dependencies
+└── README.md # ← You are here
 
 ---
 
-## ⚙️ Setup Instructions
+## ⚙️ Setup & Installation
 
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/yourusername/beroozgar-backend.git
-cd beroozgar-backend
+1. **Clone repo**
+   ```bash
+   git clone https://github.com/ankitraj20616/Beroozgar.git
+   cd Beroozgar
 
-2️⃣ Create and Activate Virtual Environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+Install dependencies
+bash
+poetry install
 
-3️⃣ Install Dependencies
-pip install -r requirements.txt
+Environment variables
+bash
+cp .env.example .env
+Fill in database URL, email creds, JWT keys, etc.
 
-4️⃣ Set Environment Variables
-Create .env or add these in config.py:
-
-env
-
-DATABASE_URL=postgresql://username:password@localhost/dbname
-SECRET_KEY=your-secret-key
-ALGORITHM=HS256
-TOKEN_EXPIRE_MINUTES=60
-EMAIL_USER=yourgmail@gmail.com
-EMAIL_PASS=yourappspecificpassword
-
-5️⃣ Run the Application
-
+Run the API
+bash
 uvicorn main:app --reload
-🔌 WebSocket Endpoints
-ws://localhost:8000/ws — Notification channel
-ws://localhost:8000/ws/chat — Chat channel
+Access docs at http://127.0.0.1:8000/docs.
 
-Send JSON data:
+🧪 Running Tests
+Bootstrap test fixtures and run:
+bash
+export PYTHONPATH=.
+pytest -q
+Covers signup, duplicate checks, login OTP, JWT, job CRUD, and notifications.
 
-json
+🔐 Authentication Flow
+User Signup (POST /userSignup)
+Multipart form data + resume upload.
+OTP Login (POST /userLoginEmailSender + POST /otpVerifier)
+Generates OTP, stores in DB, returns JWT in cookie.
+Access Protected Routes via JWT in cookie.
 
-{
-  "to": "receiver@email.com",
-  "message": "Hello!"
-}
+📧 Email, Resume & Scoring
+Emails sent via Gmail SMTP using credentials in .env.
+Resume content parsed via pdfplumber.
+Job–Resume matching using TF-IDF & cosine_similarity.
 
-📡 REST API Endpoints
-Method	Endpoint	Description
-POST	/userSignup	Register user with resume
-POST	/userLoginEmailSender	Send OTP to email
-POST	/otpVerifier	Verify OTP and login
-GET	/jobs	List all jobs
-POST	/apply/{job_id}	Apply to a job
-GET	/user/applied-jobs	View applied jobs
-GET	/user/notifications	View notifications
-GET	/download-resume/{user_id}	Download resume as PDF
-GET	/chat-history	Get chat history
+💼 Job & Application Workflow
+Recruiter Signup → POST /recruiter-signup
+Post Job → POST /new-job
+View Jobs → GET /jobs, /job/{id}, /jobs/search, /jobs/recent
 
-More endpoints available for recruiters...
+Apply to Job:
+POST /apply/{job_id}
+Parses resume, scores, sends notifications, persists application.
+View Applications → /user/applied-jobs, /recruiter/job/{job_id}/applications
 
-👨‍💻 Author
-Ankit Raj
+🎙️ Interview & Notifications
+Schedule Interview → POST /schedule-interview
+Sends email & in-app notifications to both parties.
+Get Notifications → /user/notifications, /recruiter/notifications
+Mark Read Notification → PUT /notification/{id}/read
 
-⭐️ If you like this project...
-Star ⭐️ the repo on GitHub and share it with others!
+💬 Real-Time Chat
+WebSockets at /ws/chat for authenticated users.
+Persist chat messages in DB.
+Retrieve history: GET /chat-history?with_email={email}
+
+🔧 Utility Functions
+otp_generator(), mail_sender() for email OTPs.
+score_resume_against_job() returns % match + review.
+notification_sender(), create_notification() manage notifications.
+
+✅ Contributing
+Fork & clone repository
+Create branch (git checkout -b feature/my-feature)
+Commit with meaningful messages and tests
+Open a Pull Request
+
