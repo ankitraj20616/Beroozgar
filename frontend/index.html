@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobPortal - Find Your Dream Job</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <h2>JobPortal</h2>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="#" class="nav-link" data-page="home">Home</a>
+          <a href="#" class="nav-link" data-page="jobs">Jobs</a>
+          <a href="#" class="nav-link" data-page="about">About</a>
+          <div class="auth-buttons" id="auth-buttons">
+            <button class="btn btn-outline" id="login-btn">Login</button>
+            <button class="btn btn-primary" id="signup-btn">Sign Up</button>
+          </div>
+          <div class="user-menu" id="user-menu" style="display: none">
+            <button class="btn btn-outline" id="dashboard-btn">
+              Dashboard
+            </button>
+            <button class="btn btn-outline" id="notifications-btn">
+              Notifications
+            </button>
+            <button class="btn btn-outline" id="chat-btn">Chat</button>
+            <button class="btn btn-outline" id="logout-btn">Logout</button>
+          </div>
+        </div>
+        <div class="hamburger" id="hamburger">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+      <!-- Home Page -->
+      <div id="home-page" class="page active">
+        <section class="hero">
+          <div class="hero-content">
+            <h1>Find Your Dream Job Today</h1>
+            <p>
+              Connect with top employers and discover opportunities that match
+              your skills and aspirations.
+            </p>
+            <div class="hero-buttons">
+              <button class="btn btn-primary btn-large" id="hero-signup">
+                Get Started
+              </button>
+              <button class="btn btn-outline btn-large" id="hero-browse">
+                Browse Jobs
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="features">
+          <div class="container">
+            <h2>Why Choose JobPortal?</h2>
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Matching</h3>
+                <p>
+                  AI-powered resume scoring to match you with the perfect job
+                  opportunities.
+                </p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Direct Communication</h3>
+                <p>
+                  Chat directly with recruiters and get real-time updates on
+                  your applications.
+                </p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Application Tracking</h3>
+                <p>
+                  Track your job applications and interview schedules in one
+                  place.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Jobs Page -->
+      <div id="jobs-page" class="page">
+        <div class="container">
+          <div class="jobs-header">
+            <h1>Find Jobs</h1>
+            <div class="search-filters">
+              <div class="search-bar">
+                <input
+                  type="text"
+                  id="job-search-title"
+                  placeholder="Job title or keyword"
+                />
+                <input
+                  type="text"
+                  id="job-search-location"
+                  placeholder="Location"
+                />
+                <input
+                  type="text"
+                  id="job-search-skills"
+                  placeholder="Skills"
+                />
+                <button class="btn btn-primary" id="search-jobs-btn">
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="jobs-container">
+            <div id="jobs-list" class="jobs-list">
+              <!-- Jobs will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Page -->
+      <div id="dashboard-page" class="page">
+        <div class="container">
+          <div class="dashboard-header">
+            <h1 id="dashboard-title">Dashboard</h1>
+            <div class="dashboard-tabs">
+              <button class="tab-btn active" data-tab="overview">
+                Overview
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="applications"
+                id="applications-tab"
+              >
+                Applications
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="jobs"
+                id="jobs-tab"
+                style="display: none"
+              >
+                My Jobs
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="create-job"
+                id="create-job-tab"
+                style="display: none"
+              >
+                Create Job
+              </button>
+            </div>
+          </div>
+
+          <div class="dashboard-content">
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <h3 id="total-applications">0</h3>
+                  <p>Total Applications</p>
+                </div>
+                <div class="stat-card">
+                  <h3 id="pending-applications">0</h3>
+                  <p>Pending</p>
+                </div>
+                <div class="stat-card">
+                  <h3 id="interviews-scheduled">0</h3>
+                  <p>Interviews</p>
+                </div>
+              </div>
+              <div class="recent-activity">
+                <h3>Recent Activity</h3>
+                <div id="recent-activity-list">
+                  <!-- Recent activity items -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Applications Tab -->
+            <div id="applications-tab-content" class="tab-content">
+              <div id="applications-list">
+                <!-- Applications will be loaded here -->
+              </div>
+            </div>
+
+            <!-- My Jobs Tab (Recruiter) -->
+            <div id="jobs-tab-content" class="tab-content">
+              <div id="recruiter-jobs-list">
+                <!-- Recruiter jobs will be loaded here -->
+              </div>
+            </div>
+
+            <!-- Create Job Tab (Recruiter) -->
+            <div id="create-job-tab-content" class="tab-content">
+              <form id="create-job-form" class="form">
+                <h3>Create New Job</h3>
+                <div class="form-group">
+                  <label for="job-title">Job Title</label>
+                  <input type="text" id="job-title" name="title" required />
+                </div>
+                <div class="form-group">
+                  <label for="job-description">Job Description</label>
+                  <textarea
+                    id="job-description"
+                    name="description"
+                    rows="5"
+                    required
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="job-skills">Skills Required</label>
+                  <input
+                    type="text"
+                    id="job-skills"
+                    name="skills_required"
+                    placeholder="e.g., JavaScript, React, Node.js"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="job-experience">Experience Required</label>
+                  <input
+                    type="text"
+                    id="job-experience"
+                    name="experience_required"
+                    placeholder="e.g., 2-3 years"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="job-salary">Salary</label>
+                  <input
+                    type="text"
+                    id="job-salary"
+                    name="salary"
+                    placeholder="e.g., $50,000 - $70,000"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="job-location">Location</label>
+                  <input
+                    type="text"
+                    id="job-location"
+                    name="location"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="job-status">Status</label>
+                  <select id="job-status" name="status">
+                    <option value="Open">Open</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Create Job
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Page -->
+      <div id="notifications-page" class="page">
+        <div class="container">
+          <h1>Notifications</h1>
+          <div id="notifications-list" class="notifications-list">
+            <!-- Notifications will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Page -->
+      <div id="chat-page" class="page">
+        <div class="container">
+          <div class="chat-container">
+            <div class="chat-sidebar">
+              <h3>Conversations</h3>
+              <div id="chat-contacts" class="chat-contacts">
+                <!-- Chat contacts will be loaded here -->
+              </div>
+            </div>
+            <div class="chat-main">
+              <div class="chat-header">
+                <h3 id="chat-with">Select a conversation</h3>
+              </div>
+              <div id="chat-messages" class="chat-messages">
+                <!-- Chat messages will be displayed here -->
+              </div>
+              <div class="chat-input">
+                <input
+                  type="text"
+                  id="message-input"
+                  placeholder="Type a message..."
+                  disabled
+                />
+                <button id="send-message-btn" class="btn btn-primary" disabled>
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="login-modal">&times;</span>
+        <h2>Login</h2>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth="user">Job Seeker</button>
+          <button class="auth-tab" data-auth="recruiter">Recruiter</button>
+        </div>
+        <form id="login-form" class="form">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            Send OTP
+          </button>
+        </form>
+
+        <form id="otp-form" class="form" style="display: none">
+          <div class="form-group">
+            <label for="otp-code">Enter OTP</label>
+            <input type="number" id="otp-code" name="otp" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            Verify OTP
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signup-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="signup-modal">&times;</span>
+        <h2>Sign Up</h2>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth="user">Job Seeker</button>
+          <button class="auth-tab" data-auth="recruiter">Recruiter</button>
+        </div>
+
+        <!-- User Signup Form -->
+        <form id="user-signup-form" class="form auth-form active">
+          <div class="form-group">
+            <label for="user-name">Full Name</label>
+            <input type="text" id="user-name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="user-email">Email</label>
+            <input type="email" id="user-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="user-phone">Phone</label>
+            <input type="tel" id="user-phone" name="phone" required />
+          </div>
+          <div class="form-group">
+            <label for="user-skills">Skills</label>
+            <input
+              type="text"
+              id="user-skills"
+              name="skills"
+              placeholder="e.g., JavaScript, Python, React"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="user-experience">Experience</label>
+            <input
+              type="text"
+              id="user-experience"
+              name="experience"
+              placeholder="e.g., 2 years"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="user-education">Education</label>
+            <input type="text" id="user-education" name="education" required />
+          </div>
+          <div class="form-group">
+            <label for="user-resume">Resume (PDF)</label>
+            <input
+              type="file"
+              id="user-resume"
+              name="resume"
+              accept=".pdf"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            Sign Up
+          </button>
+        </form>
+
+        <!-- Recruiter Signup Form -->
+        <form id="recruiter-signup-form" class="form auth-form">
+          <div class="form-group">
+            <label for="recruiter-name">Full Name</label>
+            <input type="text" id="recruiter-name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="recruiter-email">Email</label>
+            <input type="email" id="recruiter-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="recruiter-company">Company</label>
+            <input type="text" id="recruiter-company" name="company" required />
+          </div>
+          <div class="form-group">
+            <label for="recruiter-phone">Phone</label>
+            <input type="tel" id="recruiter-phone" name="phone" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Job Details Modal -->
+    <div id="job-details-modal" class="modal">
+      <div class="modal-content modal-large">
+        <span class="close" data-modal="job-details-modal">&times;</span>
+        <div id="job-details-content">
+          <!-- Job details will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview Schedule Modal -->
+    <div id="interview-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="interview-modal">&times;</span>
+        <h2>Schedule Interview</h2>
+        <form id="interview-form" class="form">
+          <div class="form-group">
+            <label for="interview-date">Interview Date & Time</label>
+            <input
+              type="datetime-local"
+              id="interview-date"
+              name="date"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="interview-mode">Interview Mode</label>
+            <select id="interview-mode" name="mode" required>
+              <option value="">Select Mode</option>
+              <option value="Video Call">Video Call</option>
+              <option value="Phone Call">Phone Call</option>
+              <option value="In-Person">In-Person</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            Schedule Interview
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    <script src="jquery.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

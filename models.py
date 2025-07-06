@@ -111,3 +111,4 @@ class ChatMessage(Base):
     ReceiverEmail = Column(String, nullable=False)
     Message = Column(String, nullable=False)
     Timestamp = Column(DateTime(timezone= True), server_default= func.now())
+    is_read = Column(Boolean, default=False) 

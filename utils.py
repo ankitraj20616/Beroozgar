@@ -11,7 +11,7 @@ from fastapi import HTTPException, Request, Depends, status
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import JWTAuth
-from models import Notification
+from models import Notification, User, Recruiter
 
 
 authentication = JWTAuth()
@@ -26,6 +26,15 @@ def check_who_loged_in(request: Request= None)-> str:
         raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f"Invalid or expired token, error: {e}")
     email = payload.get("email")
     return email
+
+def check_user_type(email: str, db: Session = None):
+    user = db.query(User).filter(User.Email == email).first()
+    if user:
+        return "user"
+    recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
+    if recruiter:
+        return "recruiter"
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Unauthorized: token not found.")
 
 def create_notification(message: str, user_id: int= None, job_id: int= None, db: Session= None):
     notification = Notification(
