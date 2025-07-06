@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
 from schemas import UserLogin, RecruiterCreate, JobCreate
 from database import get_db, get_db_sync
 from starlette import status
-from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification
+from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
 from pydantic import EmailStr
 from datetime import timedelta
 from config import setting
@@ -97,8 +98,8 @@ def verify_sent_otp(otp: int, email: EmailStr, db: Session = Depends(get_db)):
             key= "access_token",
             value= jwt_token,
             httponly= True,
-            secure= True,
-            samesite= "lax",
+            secure= False, 
+            samesite= "Lax",
             max_age=setting.TOKEN_EXPIRE_MINUTES * 60
         )
         
@@ -106,12 +107,15 @@ def verify_sent_otp(otp: int, email: EmailStr, db: Session = Depends(get_db)):
     raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "Incorrect OTP.")
 
 @router.get("/protected-route")
-def protected_route(request: Request):
+def protected_route(request: Request, db: Session= Depends(get_db)):
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Unauthorized, token not found.")
     payload = authentication.verify_token(token= token)
-    return {"user": payload}
+    user_type = check_user_type(email= payload.get("email"), db= db)
+    return {"user": payload,
+            "user_email": payload.get("email"),
+            "user_type": user_type}
 
 @router.post("/logout")
 def logout(response: Response):
@@ -323,10 +327,10 @@ async def schedule_interview(application_id: int, date: str, mode: str, recruite
     notification_message_for_recruiter = f"Interview scheduled with candidate ID {is_valid_application_id.UserID}"
     notification_sender(recruiter_email, notification_message_for_recruiter)
     create_notification(message= notification_message_for_recruiter, user_id= recruiter.RecruiterID, job_id= is_valid_application_id.JobID, db= db)
+
     await send_ws_notification(recruiter.Email, notification_message_for_recruiter)
-
-
     return {"message": "Interview scheduled"}
+    
 
 
 @router.get("/download-resume/{user_id}")
@@ -372,16 +376,6 @@ def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
 # key-> email, value-> websocket object
 active_websocket_connections = {}
 
-@router.websocket("/ws")
-async def create_websocket_connection(websocket: WebSocket, email: str= Depends(check_who_loged_in)):
-    await websocket.accept()
-    active_websocket_connections[email] = websocket
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        del active_websocket_connections[email]
-
 async def send_ws_notification(email:str, message: str):
     websocket: WebSocket = active_websocket_connections.get(email)
     if websocket:
@@ -389,7 +383,7 @@ async def send_ws_notification(email:str, message: str):
 
 
 @router.websocket("/ws/chat")
-async def websocket_receive_chat(websocket: WebSocket, email: str= Depends(check_who_loged_in)):
+async def websocket_receive_chat(websocket: WebSocket, email: str):
     await websocket.accept()
     active_websocket_connections[email] = websocket
     try:
@@ -432,6 +426,57 @@ def get_chat_history(with_email: str, user_email: str= Depends(check_who_loged_i
         ((ChatMessage.SenderEmail == with_email) & (ChatMessage.ReceiverEmail == user_email))
     ).order_by(ChatMessage.Timestamp.asc()).all()
 
-    return [{"from": msg.SenderEmail, "to": msg.ReceiverEmail, "message": msg.Message, "timestamp": msg.created_at} for msg in messages]
+    return [{"from": msg.SenderEmail, "to": msg.ReceiverEmail, "message": msg.Message, "timestamp": msg.Timestamp} for msg in messages]
+
+@router.get("/chat/contacts")
+def get_chat_contacts(user_email: str = Depends(check_who_loged_in), db: Session = Depends(get_db)):
+    # Get all unique contact emails (both sent and received)
+    receivers_mail = db.query(ChatMessage.ReceiverEmail).filter(ChatMessage.SenderEmail == user_email)
+    senders_mail = db.query(ChatMessage.SenderEmail).filter(ChatMessage.ReceiverEmail == user_email)
+    all_contacts = set()
+
+    for mail in receivers_mail:
+        all_contacts.add(mail[0])
+    for mail in senders_mail:
+        all_contacts.add(mail[0])
+
+    result = []
+
+    for contact_email in all_contacts:
+        # Get user name (if exists)
+        user = db.query(User).filter(User.Email == contact_email).first()
+
+        # Get the last message between user and contact
+        last_msg = db.query(ChatMessage).filter(
+            or_(
+                and_(ChatMessage.SenderEmail == user_email, ChatMessage.ReceiverEmail == contact_email),
+                and_(ChatMessage.SenderEmail == contact_email, ChatMessage.ReceiverEmail == user_email)
+            )
+        ).order_by(desc(ChatMessage.Timestamp)).first()
+
+        # Count unread messages from contact
+        unread_count = db.query(func.count()).filter(
+            ChatMessage.SenderEmail == contact_email,
+            ChatMessage.ReceiverEmail == user_email,
+            ChatMessage.is_read == False  
+        ).scalar()
+
+        result.append({
+            "email": contact_email,
+            "name": user.Name if user else None,
+            "last_message": last_msg.Message if last_msg else None,
+            "unread_count": unread_count or 0
+        })
+
+    return result
 
 
+@router.get("/check-registered-email")
+def check_registered_email(email_to_check: str, db: Session= Depends(get_db)):
+    check_in_users = db.query(User).filter(User.Email == email_to_check).first()
+    if check_in_users:
+        return {"response": f"{email_to_check} is registered."}
+    check_in_recruiter = db.query(Recruiter).filter(Recruiter.Email == email_to_check).first()
+    if check_in_recruiter:
+        return {"response": f"{email_to_check} is registered."}
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Email is not registered.")
