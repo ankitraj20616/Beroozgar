@@ -210,13 +210,10 @@ The frontend can be deployed on:
 5. Commit with meaningful messages and tests
 6. Open a Pull Request
 
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ## 🤝 Support
 
-For support, email [your-email@example.com] or create an issue in the GitHub repository.
+For support, email [ankitrajthakur803@gmail.com] or create an issue in the GitHub repository.
 
 ---
 
