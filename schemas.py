@@ -17,6 +17,15 @@ class UserRead(UserBase):
         from_attributes = True
     )
 
+class UserUpdate(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]
+    phone: Optional[str]
+    skills: Optional[str]
+    experience: Optional[str]
+    education: Optional[str]
+
+
 class UserLogin(BaseModel):
     email: EmailStr
     model_config = ConfigDict(

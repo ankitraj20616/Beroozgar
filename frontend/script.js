@@ -53,6 +53,9 @@ function setupEventListeners() {
   $("#notifications-btn").click(() => showPage("notifications"));
   $("#chat-btn").click(() => showPage("chat"));
 
+  // Profile navigation
+  $("#profile-btn").click(() => showPage("profile"));
+
   // Modal close buttons
   $(".close").click(function () {
     const modalId = $(this).data("modal");
@@ -72,6 +75,9 @@ function setupEventListeners() {
   $("#recruiter-signup-form").submit(handleRecruiterSignup);
   $("#create-job-form").submit(handleCreateJob);
   $("#interview-form").submit(handleScheduleInterview);
+
+  // Profile forms
+  $("#profile-edit-form").submit(handleProfileUpdate);
 
   // Dashboard tabs
   $(".tab-btn").click(function () {
@@ -129,6 +135,9 @@ function showPage(pageId) {
     case "chat":
       loadChatContacts();
       break;
+    case "profile":
+      loadProfile();
+      break;
   }
 }
 
@@ -174,7 +183,6 @@ function checkAuthStatus() {
     success: (response) => {
       currentUser = response.user;
       currentUserEmail = response.user_email;
-
       userType = response.user_type;
       console.log(userType);
       updateNavigation();
@@ -227,7 +235,6 @@ function handleOTPVerification(e) {
       email
     )}`,
     method: "POST",
-
     xhrFields: {
       withCredentials: true,
     },
@@ -347,6 +354,323 @@ function logout() {
   });
 }
 
+// Profile functions
+function loadProfile() {
+  if (!currentUser) {
+    showPage("home");
+    showToast("Please login to view your profile", "warning");
+    return;
+  }
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/current-user-data`,
+    method: "GET",
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (userData) => {
+      hideLoading();
+      displayProfile(userData);
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to load profile";
+      showToast(error, "error");
+    },
+  });
+}
+
+function displayProfile(userData) {
+  // Update profile view
+  $("#profile-name").text(userData.Name || "Not provided");
+  $("#profile-email").text(userData.Email || "Not provided");
+  $("#profile-phone").text(userData.Phone || "Not provided");
+
+  // Update avatar
+  const initials = userData.Name ? userData.Name.charAt(0).toUpperCase() : "U";
+  $("#profile-avatar-text").text(initials);
+
+  if (userType === "user") {
+    // Show user-specific fields
+    $("#edit-skills-group").show();
+    $("#edit-experience-group").show();
+    $("#edit-education-group").show();
+    $("#edit-resume-group").show();
+    $("#edit-company-group").hide();
+
+    // Update skills display
+    if (userData.Skills) {
+      const skillsHtml = userData.Skills.split(",")
+        .map((skill) => `<span class="skill-tag">${skill.trim()}</span>`)
+        .join("");
+      $("#profile-skills").html(skillsHtml);
+    } else {
+      $("#profile-skills").html(
+        '<span class="skill-tag">No skills added</span>'
+      );
+    }
+
+    $("#profile-experience").text(userData.Experience || "Not provided");
+    $("#profile-education").text(userData.Education || "Not provided");
+
+    // Handle resume display
+    if (userData.Resume) {
+      $("#profile-resume").html(`
+        <button class="btn btn-outline btn-small" onclick="downloadCurrentResume()">
+          Download Resume
+        </button>
+        <span class="resume-status">✓ Resume uploaded</span>
+      `);
+    } else {
+      $("#profile-resume").html(`
+        <span class="resume-status">No resume uploaded</span>
+      `);
+    }
+  } else {
+    // Show recruiter-specific fields
+    $("#edit-skills-group").hide();
+    $("#edit-experience-group").hide();
+    $("#edit-education-group").hide();
+    $("#edit-resume-group").hide();
+    $("#edit-company-group").show();
+
+    $("#profile-company")
+      .text(userData.Company || "Not provided")
+      .show();
+
+    // Hide user-specific sections for recruiters
+    $(".detail-section").each(function () {
+      const heading = $(this).find("h3").text();
+      if (["Skills", "Experience", "Education", "Resume"].includes(heading)) {
+        $(this).hide();
+      }
+    });
+  }
+
+  // Populate edit form
+  populateEditForm(userData);
+
+  // Show profile view, hide edit form
+  $("#profile-view").show();
+  $("#profile-edit").hide();
+
+  // Setup event listeners for profile actions
+  setupProfileEventListeners();
+}
+
+function populateEditForm(userData) {
+  $("#edit-name").val(userData.Name || "");
+  $("#edit-email")
+    .val(userData.Email || "")
+    .prop("readonly", true); // Email should not be editable
+  $("#edit-phone").val(userData.Phone || "");
+
+  if (userType === "user") {
+    $("#edit-skills").val(userData.Skills || "");
+    $("#edit-experience").val(userData.Experience || "");
+    $("#edit-education").val(userData.Education || "");
+  } else {
+    $("#edit-company").val(userData.Company || "");
+  }
+}
+
+function setupProfileEventListeners() {
+  // Remove existing listeners to prevent duplicates
+  $("#edit-profile-btn").off("click");
+  $("#cancel-edit-btn").off("click");
+  $("#profile-edit-form").off("submit");
+
+  // Edit profile button
+  $("#edit-profile-btn").on("click", function () {
+    $("#profile-view").hide();
+    $("#profile-edit").show();
+  });
+
+  // Cancel edit button
+  $("#cancel-edit-btn").on("click", function () {
+    $("#profile-edit").hide();
+    $("#profile-view").show();
+    // Reset form to original values
+    loadProfile();
+  });
+
+  // Profile edit form submission
+  $("#profile-edit-form").on("submit", handleProfileUpdate);
+}
+
+function handleProfileUpdate(e) {
+  e.preventDefault();
+
+  const updateData = {
+    name: $("#edit-name").val(),
+    phone: $("#edit-phone").val(),
+  };
+
+  if (userType === "user") {
+    updateData.skills = $("#edit-skills").val();
+    updateData.experience = $("#edit-experience").val();
+    updateData.education = $("#edit-education").val();
+  } else {
+    updateData.company = $("#edit-company").val();
+  }
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/update-your-details`,
+    method: "PATCH",
+    contentType: "application/json",
+    data: JSON.stringify(updateData),
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast("Profile updated successfully!", "success");
+
+      // Handle resume update if file is selected
+      const resumeFile = $("#edit-resume")[0].files[0];
+      if (resumeFile && userType === "user") {
+        handleResumeUpdate(resumeFile);
+      } else {
+        // Reload profile to show updated data
+        loadProfile();
+      }
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to update profile";
+      showToast(error, "error");
+    },
+  });
+}
+
+function handleResumeUpdate(file) {
+  const formData = new FormData();
+  formData.append("new_resume", file);
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/update-resume`,
+    method: "PATCH",
+    data: formData,
+    processData: false,
+    contentType: false,
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast("Resume updated successfully!", "success");
+      // Clear the file input
+      $("#edit-resume").val("");
+      // Reload profile to show updated resume status
+      loadProfile();
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to update resume";
+      showToast(error, "error");
+    },
+  });
+}
+
+function downloadCurrentResume() {
+  if (!currentUser) {
+    showToast("Please login to download resume", "warning");
+    return;
+  }
+
+  // Create a temporary link to download the resume
+  const downloadUrl = `${API_BASE}/download-resume/${
+    currentUser.id || currentUserEmail
+  }`;
+  window.open(downloadUrl, "_blank");
+}
+
+function confirmDeleteAccount() {
+  // Create a custom confirmation modal
+  const confirmationHtml = `
+    <div id="delete-confirmation-modal" class="modal" style="display: block;">
+      <div class="modal-content">
+        <h2 style="color: #dc3545;">Delete Account</h2>
+        <p>Are you sure you want to delete your account?</p>
+        <p><strong>This action cannot be undone and will permanently remove:</strong></p>
+        <ul>
+          <li>Your profile information</li>
+          <li>All job applications</li>
+          <li>Chat history</li>
+          <li>All personal data</li>
+        </ul>
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+            Yes, Delete My Account
+          </button>
+          <button type="button" class="btn btn-outline" id="cancel-delete-btn">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("body").append(confirmationHtml);
+
+  // Handle confirmation
+  $("#confirm-delete-btn").on("click", function () {
+    $("#delete-confirmation-modal").remove();
+    deleteAccount();
+  });
+
+  // Handle cancellation
+  $("#cancel-delete-btn").on("click", function () {
+    $("#delete-confirmation-modal").remove();
+  });
+}
+
+function deleteAccount() {
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/delete-account`,
+    method: "DELETE",
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast(
+        "Account deleted successfully. We're sorry to see you go!",
+        "success"
+      );
+
+      // Clear user data and redirect
+      currentUser = null;
+      currentUserEmail = null;
+      userType = null;
+      updateNavigation();
+      showPage("home");
+
+      // Close WebSocket connection
+      if (websocket) {
+        websocket.close();
+        websocket = null;
+      }
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to delete account";
+      showToast(error, "error");
+    },
+  });
+}
+
+// Add delete account button functionality
+$(document).on("click", "#delete-account-btn", confirmDeleteAccount);
+
 // Job functions
 function loadJobs() {
   showLoading();
@@ -418,7 +742,7 @@ function displayJobs(jobs) {
                       job.JobID
                     }">View Details</button>
                     ${
-                      currentUser
+                      currentUser && userType === "user"
                         ? `<button class="btn btn-success apply-job-btn" data-job-id="${job.JobID}">Apply Now</button>`
                         : ""
                     }
@@ -474,10 +798,10 @@ function viewJobDetails(jobId) {
                     <p>${job.Description}</p>
                 </div>
                 ${
-                  currentUser
+                  currentUser && userType === "user"
                     ? `
                     <div class="job-actions mt-20">
-                        <button class="btn btn-success" onclick="applyForJob(${job.JobID})">Apply for this Job</button>
+                        <button class="btn btn-success" onclick="applyForJob('${job.JobID}')">Apply for this Job</button>
                     </div>
                 `
                     : ""
@@ -500,6 +824,11 @@ function applyForJob(jobId) {
     return;
   }
 
+  if (userType !== "user") {
+    showToast("Only job seekers can apply for jobs", "warning");
+    return;
+  }
+
   showLoading();
 
   $.ajax({
@@ -513,22 +842,28 @@ function applyForJob(jobId) {
       showToast("Application submitted successfully!", "success");
       hideModal("job-details-modal");
 
-      // Show application result
+      // Show application result in a modal
       const resultHtml = `
-                <div class="application-result">
-                    <h3>Application Submitted!</h3>
-                    <p><strong>Resume Score:</strong> ${response.score}/100</p>
-                    <div class="score-bar">
-                        <div class="score-fill" style="width: ${response.score}%"></div>
-                    </div>
-                    <div class="ai-review">
-                        <h4>AI Review:</h4>
-                        <p>${response.review}</p>
-                    </div>
-                </div>
-            `;
+        <div id="application-result-modal" class="modal" style="display: block;">
+          <div class="modal-content">
+            <span class="close" onclick="$('#application-result-modal').remove()">&times;</span>
+            <div class="application-result">
+              <h3>Application Submitted Successfully!</h3>
+              <p><strong>Resume Score:</strong> ${response.score}/100</p>
+              <div class="score-bar" style="background: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0;">
+                <div class="score-fill" style="width: ${response.score}%; height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s ease;"></div>
+              </div>
+              <div class="ai-review">
+                <h4>AI Review:</h4>
+                <p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">${response.review}</p>
+              </div>
+              <button class="btn btn-primary" onclick="$('#application-result-modal').remove()" style="margin-top: 15px;">Close</button>
+            </div>
+          </div>
+        </div>
+      `;
 
-      showToast(resultHtml, "success");
+      $("body").append(resultHtml);
     },
     error: (xhr) => {
       hideLoading();
@@ -1003,87 +1338,6 @@ function loadChatContacts() {
   });
 }
 
-// function displayChatContacts(contacts) {
-//   console.log(contacts);
-//   const contactsList = $("#chat-contacts");
-//   contactsList.empty();
-
-//   // Add search bar
-//   const searchBar = $(`
-//     <div class="chat-search-container">
-//       <input type="email" id="email-search" placeholder="Search or enter email address..." class="form-control">
-//       <button type="button" id="search-email-btn" class="btn btn-primary">Search</button>
-//     </div>
-//   `);
-
-//   contactsList.append(searchBar);
-
-//   // Add contacts list header
-//   const contactsHeader = $(`
-//     <div class="contacts-header">
-//       <h4>Recent Conversations</h4>
-//     </div>
-//   `);
-//   contactsList.append(contactsHeader);
-
-//   // Display contacts
-//   if (contacts.length === 0) {
-//     const noContacts = $(`
-//       <div class="no-contacts">
-//         <p>No recent conversations. Use the search bar above to start a new chat.</p>
-//       </div>
-//     `);
-//     contactsList.append(noContacts);
-//   } else {
-//     contacts.forEach((contact) => {
-//       const contactItem = $(`
-//       <div class="chat-contact" data-email="${contact.email}">
-//         <div class="contact-info">
-//           <strong>${contact.name || contact.email}</strong>
-//           <div class="contact-email">${contact.email}</div>
-//           ${
-//             contact.last_message
-//               ? `<div class="last-message">${contact.last_message}</div>`
-//               : ""
-//           }
-//         </div>
-//         ${
-//           contact.unread_count
-//             ? `<div class="unread-badge">${contact.unread_count}</div>`
-//             : ""
-//         }
-//       </div>
-//     `);
-//       contactsList.append(contactItem);
-//     });
-//   }
-
-//   // Attach event listeners
-//   $(".chat-contact").click(function () {
-//     const email = $(this).data("email");
-//     selectChatContact(email);
-//   });
-
-//   // Search functionality
-//   $("#search-email-btn").click(searchAndSelectEmail);
-//   $("#email-search").keypress((e) => {
-//     if (e.which === 13) {
-//       // Enter key
-//       searchAndSelectEmail();
-//     }
-//   });
-
-//   // Real-time search as user types
-//   $("#email-search").on("input", function () {
-//     const searchTerm = $(this).val().toLowerCase();
-//     if (searchTerm.length > 0) {
-//       filterContacts(searchTerm);
-//     } else {
-//       $(".chat-contact").show();
-//     }
-//   });
-// }
-
 function displayChatContacts(contacts) {
   console.log(contacts);
   const contactsList = $("#chat-contacts");
@@ -1206,6 +1460,34 @@ const readIndicatorStyles = `
 
 .chat-contact:hover .unread-badge {
   background-color: #c82333;
+}
+
+.resume-status {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #28a745;
+}
+
+.profile-section {
+  margin-bottom: 20px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
 }
 </style>
 `;
@@ -1369,28 +1651,6 @@ function updateContactUnreadStatus(friendEmail) {
   }
 }
 
-// function selectChatContact(email) {
-//   currentChatUser = email;
-
-//   $(".chat-contact").removeClass("active");
-//   $(`.chat-contact[data-email="${email}"]`).addClass("active");
-
-//   // Update chat header
-//   const contactName =
-//     $(`.chat-contact[data-email="${email}"] strong`).text() || email;
-//   $("#chat-with").text(`Chat with ${contactName}`);
-
-//   // Enable message input
-//   $("#message-input").prop("disabled", false);
-//   $("#send-message-btn").prop("disabled", false);
-
-//   // Show chat area
-//   $("#chat-area").show();
-
-//   // Load chat history
-//   loadChatHistory(email);
-// }
-
 function selectChatContact(email) {
   currentChatUser = email;
 
@@ -1435,35 +1695,6 @@ function loadChatHistory(withEmail) {
     },
   });
 }
-
-// function displayChatMessages(messages) {
-//   const messagesContainer = $("#chat-messages");
-//   messagesContainer.empty();
-
-//   if (messages.length === 0) {
-//     const emptyState = $(`
-//       <div class="empty-chat">
-//         <p>No messages yet. Start the conversation!</p>
-//       </div>
-//     `);
-//     messagesContainer.append(emptyState);
-//   } else {
-//     messages.forEach((message) => {
-//       // Fix the logic: check if message sender is current user
-//       const isSent = message.from === currentUserEmail;
-//       const messageDiv = $(`
-//         <div class="message ${isSent ? "sent" : "received"}">
-//           <div class="message-content">${message.message}</div>
-//           <div class="message-time">${formatDate(message.timestamp)}</div>
-//         </div>
-//       `);
-//       messagesContainer.append(messageDiv);
-//     });
-//   }
-
-//   // Scroll to bottom
-//   messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-// }
 
 function displayChatMessages(messages) {
   const messagesContainer = $("#chat-messages");

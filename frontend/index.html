@@ -25,6 +25,7 @@
             <button class="btn btn-outline" id="dashboard-btn">
               Dashboard
             </button>
+            <button class="btn btn-outline" id="profile-btn">Profile</button>
             <button class="btn btn-outline" id="notifications-btn">
               Notifications
             </button>
@@ -131,6 +132,154 @@
         </div>
       </div>
 
+      <!-- Profile Page -->
+      <div id="profile-page" class="page">
+        <div class="container">
+          <div class="profile-header">
+            <h1>My Profile</h1>
+            <button class="btn btn-primary" id="edit-profile-btn">
+              Edit Profile
+            </button>
+          </div>
+
+          <div class="profile-content">
+            <!-- Profile View Mode -->
+            <div id="profile-view" class="profile-section">
+              <div class="profile-card">
+                <div class="profile-avatar">
+                  <div class="avatar-placeholder">
+                    <span id="profile-avatar-text">U</span>
+                  </div>
+                </div>
+                <div class="profile-info">
+                  <h2 id="profile-name">John Doe</h2>
+                  <p id="profile-email">john.doe@example.com</p>
+                  <p id="profile-phone">+1 (555) 123-4567</p>
+                </div>
+              </div>
+
+              <div class="profile-details">
+                <div class="detail-section">
+                  <h3>Skills</h3>
+                  <div id="profile-skills" class="skills-tags">
+                    <span class="skill-tag">JavaScript</span>
+                    <span class="skill-tag">React</span>
+                    <span class="skill-tag">Node.js</span>
+                  </div>
+                </div>
+
+                <div class="detail-section">
+                  <h3>Experience</h3>
+                  <p id="profile-experience">3 years in software development</p>
+                </div>
+
+                <div class="detail-section">
+                  <h3>Education</h3>
+                  <p id="profile-education">Bachelor's in Computer Science</p>
+                </div>
+
+                <div class="detail-section">
+                  <h3>Company</h3>
+                  <p id="profile-company" style="display: none">
+                    Tech Solutions Inc.
+                  </p>
+                </div>
+
+                <div class="detail-section">
+                  <h3>Resume</h3>
+                  <div id="profile-resume">
+                    <a href="#" class="btn btn-outline btn-small"
+                      >Download Resume</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Edit Mode -->
+            <div
+              id="profile-edit"
+              class="profile-section"
+              style="display: none"
+            >
+              <form id="profile-edit-form" class="form">
+                <div class="form-group">
+                  <label for="edit-name">Full Name</label>
+                  <input type="text" id="edit-name" name="name" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="edit-email">Email</label>
+                  <input type="email" id="edit-email" name="email" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="edit-phone">Phone</label>
+                  <input type="tel" id="edit-phone" name="phone" required />
+                </div>
+
+                <div class="form-group" id="edit-skills-group">
+                  <label for="edit-skills">Skills</label>
+                  <input
+                    type="text"
+                    id="edit-skills"
+                    name="skills"
+                    placeholder="e.g., JavaScript, Python, React"
+                  />
+                </div>
+
+                <div class="form-group" id="edit-experience-group">
+                  <label for="edit-experience">Experience</label>
+                  <input
+                    type="text"
+                    id="edit-experience"
+                    name="experience"
+                    placeholder="e.g., 3 years"
+                  />
+                </div>
+
+                <div class="form-group" id="edit-education-group">
+                  <label for="edit-education">Education</label>
+                  <input type="text" id="edit-education" name="education" />
+                </div>
+
+                <div
+                  class="form-group"
+                  id="edit-company-group"
+                  style="display: none"
+                >
+                  <label for="edit-company">Company</label>
+                  <input type="text" id="edit-company" name="company" />
+                </div>
+
+                <div class="form-group" id="edit-resume-group">
+                  <label for="edit-resume">Resume (PDF)</label>
+                  <input
+                    type="file"
+                    id="edit-resume"
+                    name="resume"
+                    accept=".pdf"
+                  />
+                  <small>Leave empty to keep current resume</small>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline"
+                    id="cancel-edit-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Dashboard Page -->
       <div id="dashboard-page" class="page">
         <div class="container">

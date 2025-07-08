@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
-from schemas import UserLogin, RecruiterCreate, JobCreate
+from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate
 from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
@@ -116,6 +116,73 @@ def protected_route(request: Request, db: Session= Depends(get_db)):
     return {"user": payload,
             "user_email": payload.get("email"),
             "user_type": user_type}
+
+@router.get("/current-user-data")
+def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user = db.query(User).filter(User.Email == email).first()
+    if user:
+        return user
+    recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
+    if recruiter:
+        return recruiter
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+
+@router.patch("/update-your-details")
+def update_your_details(updated_data: UserUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+    else:
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+    if updated_data.name is not None:
+        curr_user.Name = updated_data.name
+    if updated_data.phone is not None:
+        curr_user.Phone = updated_data.phone
+    if updated_data.skills is not None:
+        curr_user.Skills = updated_data.skills
+    if updated_data.experience is not None:
+        curr_user.Experience = updated_data.experience
+    if updated_data.education is not None:
+        curr_user.Education = updated_data.education
+    db.commit()
+    db.refresh(curr_user)
+    return {"message": "User details updated successfully."}
+
+@router.patch("/update-resume")
+async def update_resume(new_resume: UploadFile = File(...), email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "recruiter":
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "You are recruiter, not candidate.")
+    user = db.query(User).filter(User.Email == email).first()
+    resume_data = await new_resume.read()
+    user.Resume = resume_data
+    db.commit()
+    db.refresh(user)
+    return {"message": "Resume updated successfully."}
+
+@router.delete("/delete-account")
+def delete_account(email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+        if not curr_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        db.delete(curr_user)
+
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+        if not curr_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        db.delete(curr_user)
+    else:
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+    db.commit()
+    response = JSONResponse(content= {"message": f"Account with email {email} deleted successfully."})
+    response.delete_cookie(key= "access_token")
+    return response
+
 
 @router.post("/logout")
 def logout(response: Response):
