@@ -1003,6 +1003,87 @@ function loadChatContacts() {
   });
 }
 
+// function displayChatContacts(contacts) {
+//   console.log(contacts);
+//   const contactsList = $("#chat-contacts");
+//   contactsList.empty();
+
+//   // Add search bar
+//   const searchBar = $(`
+//     <div class="chat-search-container">
+//       <input type="email" id="email-search" placeholder="Search or enter email address..." class="form-control">
+//       <button type="button" id="search-email-btn" class="btn btn-primary">Search</button>
+//     </div>
+//   `);
+
+//   contactsList.append(searchBar);
+
+//   // Add contacts list header
+//   const contactsHeader = $(`
+//     <div class="contacts-header">
+//       <h4>Recent Conversations</h4>
+//     </div>
+//   `);
+//   contactsList.append(contactsHeader);
+
+//   // Display contacts
+//   if (contacts.length === 0) {
+//     const noContacts = $(`
+//       <div class="no-contacts">
+//         <p>No recent conversations. Use the search bar above to start a new chat.</p>
+//       </div>
+//     `);
+//     contactsList.append(noContacts);
+//   } else {
+//     contacts.forEach((contact) => {
+//       const contactItem = $(`
+//       <div class="chat-contact" data-email="${contact.email}">
+//         <div class="contact-info">
+//           <strong>${contact.name || contact.email}</strong>
+//           <div class="contact-email">${contact.email}</div>
+//           ${
+//             contact.last_message
+//               ? `<div class="last-message">${contact.last_message}</div>`
+//               : ""
+//           }
+//         </div>
+//         ${
+//           contact.unread_count
+//             ? `<div class="unread-badge">${contact.unread_count}</div>`
+//             : ""
+//         }
+//       </div>
+//     `);
+//       contactsList.append(contactItem);
+//     });
+//   }
+
+//   // Attach event listeners
+//   $(".chat-contact").click(function () {
+//     const email = $(this).data("email");
+//     selectChatContact(email);
+//   });
+
+//   // Search functionality
+//   $("#search-email-btn").click(searchAndSelectEmail);
+//   $("#email-search").keypress((e) => {
+//     if (e.which === 13) {
+//       // Enter key
+//       searchAndSelectEmail();
+//     }
+//   });
+
+//   // Real-time search as user types
+//   $("#email-search").on("input", function () {
+//     const searchTerm = $(this).val().toLowerCase();
+//     if (searchTerm.length > 0) {
+//       filterContacts(searchTerm);
+//     } else {
+//       $(".chat-contact").show();
+//     }
+//   });
+// }
+
 function displayChatContacts(contacts) {
   console.log(contacts);
   const contactsList = $("#chat-contacts");
@@ -1036,24 +1117,37 @@ function displayChatContacts(contacts) {
     contactsList.append(noContacts);
   } else {
     contacts.forEach((contact) => {
+      $.ajax({
+        url: `${API_BASE}/count-unread-messages?friend_email=${contact.email}`,
+        method: "GET",
+        xhrFields: {
+          withCredentials: true,
+        },
+        success: (response) => {
+          contact.unread_count = response;
+        },
+        error: () => {
+          contact.unread_count = 0;
+        },
+      });
       const contactItem = $(`
-      <div class="chat-contact" data-email="${contact.email}">
-        <div class="contact-info">
-          <strong>${contact.name || contact.email}</strong>
-          <div class="contact-email">${contact.email}</div>
+        <div class="chat-contact" data-email="${contact.email}">
+          <div class="contact-info">
+            <strong>${contact.name || contact.email}</strong>
+            <div class="contact-email">${contact.email}</div>
+            ${
+              contact.last_message
+                ? `<div class="last-message">${contact.last_message}</div>`
+                : ""
+            }
+          </div>
           ${
-            contact.last_message
-              ? `<div class="last-message">${contact.last_message}</div>`
+            contact.unread_count && contact.unread_count > 0
+              ? `<div class="unread-badge">${contact.unread_count}</div>`
               : ""
           }
         </div>
-        ${
-          contact.unread_count
-            ? `<div class="unread-badge">${contact.unread_count}</div>`
-            : ""
-        }
-      </div>
-    `);
+      `);
       contactsList.append(contactItem);
     });
   }
@@ -1068,7 +1162,6 @@ function displayChatContacts(contacts) {
   $("#search-email-btn").click(searchAndSelectEmail);
   $("#email-search").keypress((e) => {
     if (e.which === 13) {
-      // Enter key
       searchAndSelectEmail();
     }
   });
@@ -1083,6 +1176,42 @@ function displayChatContacts(contacts) {
     }
   });
 }
+
+// CSS styles to add to your stylesheet for read indicators
+const readIndicatorStyles = `
+<style>
+.message.read {
+  opacity: 0.9;
+}
+
+.message.unread {
+  font-weight: bold;
+}
+
+.read-indicator {
+  color: #007bff;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+.unread-badge {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 4px 8px;
+  font-size: 12px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.chat-contact:hover .unread-badge {
+  background-color: #c82333;
+}
+</style>
+`;
+
+// Add styles to document head
+$("head").append(readIndicatorStyles);
 
 function filterContacts(searchTerm) {
   $(".chat-contact").each(function () {
@@ -1188,6 +1317,80 @@ function addNewContactToList(contact) {
   });
 }
 
+// Function to mark messages as read
+function markMessagesAsRead(friendEmail) {
+  if (!friendEmail || !currentUserEmail) {
+    console.error("Friend email or current user email is missing");
+    return;
+  }
+
+  $.ajax({
+    url: `${API_BASE}/mark_as_read?friend_email=${friendEmail}`,
+    method: "PATCH",
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      console.log("Messages marked as read:", response);
+
+      // Update UI to show messages as read
+      updateChatUIAsRead(friendEmail);
+
+      // Update contact list to remove unread badge
+      updateContactUnreadStatus(friendEmail);
+
+      // Optional: Show subtle notification
+      // showToast("Messages marked as read", "success");
+    },
+    error: (xhr) => {
+      console.error("Failed to mark messages as read:", xhr);
+      const error =
+        xhr.responseJSON?.detail || "Failed to mark messages as read";
+      showToast(error, "error");
+    },
+  });
+}
+
+function updateChatUIAsRead(friendEmail) {
+  if (currentChatUser === friendEmail) {
+    // Add visual indicator that messages are read (e.g., checkmarks)
+    $("#chat-messages .message.received").addClass("read");
+  }
+}
+
+function updateContactUnreadStatus(friendEmail) {
+  const contactElement = $(`.chat-contact[data-email="${friendEmail}"]`);
+  const unreadBadge = contactElement.find(".unread-badge");
+
+  if (unreadBadge.length > 0) {
+    unreadBadge.fadeOut(() => {
+      unreadBadge.remove();
+    });
+  }
+}
+
+// function selectChatContact(email) {
+//   currentChatUser = email;
+
+//   $(".chat-contact").removeClass("active");
+//   $(`.chat-contact[data-email="${email}"]`).addClass("active");
+
+//   // Update chat header
+//   const contactName =
+//     $(`.chat-contact[data-email="${email}"] strong`).text() || email;
+//   $("#chat-with").text(`Chat with ${contactName}`);
+
+//   // Enable message input
+//   $("#message-input").prop("disabled", false);
+//   $("#send-message-btn").prop("disabled", false);
+
+//   // Show chat area
+//   $("#chat-area").show();
+
+//   // Load chat history
+//   loadChatHistory(email);
+// }
+
 function selectChatContact(email) {
   currentChatUser = email;
 
@@ -1205,9 +1408,13 @@ function selectChatContact(email) {
 
   // Show chat area
   $("#chat-area").show();
+  friendEmail = email;
 
   // Load chat history
   loadChatHistory(email);
+
+  // Automatically mark messages as read when opening chat
+  markMessagesAsRead(email);
 }
 
 function loadChatHistory(withEmail) {
@@ -1229,6 +1436,35 @@ function loadChatHistory(withEmail) {
   });
 }
 
+// function displayChatMessages(messages) {
+//   const messagesContainer = $("#chat-messages");
+//   messagesContainer.empty();
+
+//   if (messages.length === 0) {
+//     const emptyState = $(`
+//       <div class="empty-chat">
+//         <p>No messages yet. Start the conversation!</p>
+//       </div>
+//     `);
+//     messagesContainer.append(emptyState);
+//   } else {
+//     messages.forEach((message) => {
+//       // Fix the logic: check if message sender is current user
+//       const isSent = message.from === currentUserEmail;
+//       const messageDiv = $(`
+//         <div class="message ${isSent ? "sent" : "received"}">
+//           <div class="message-content">${message.message}</div>
+//           <div class="message-time">${formatDate(message.timestamp)}</div>
+//         </div>
+//       `);
+//       messagesContainer.append(messageDiv);
+//     });
+//   }
+
+//   // Scroll to bottom
+//   messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+// }
+
 function displayChatMessages(messages) {
   const messagesContainer = $("#chat-messages");
   messagesContainer.empty();
@@ -1243,10 +1479,19 @@ function displayChatMessages(messages) {
   } else {
     messages.forEach((message) => {
       const isSent = message.from === currentUserEmail;
+      const readStatus = message.is_read ? "read" : "unread";
+
       const messageDiv = $(`
-        <div class="message ${isSent ? "sent" : "received"}">
+        <div class="message ${isSent ? "sent" : "received"} ${readStatus}">
           <div class="message-content">${message.message}</div>
-          <div class="message-time">${formatDate(message.timestamp)}</div>
+          <div class="message-time">
+            ${formatDate(message.timestamp)}
+            ${
+              isSent && message.is_read
+                ? '<span class="read-indicator">✓✓</span>'
+                : ""
+            }
+          </div>
         </div>
       `);
       messagesContainer.append(messageDiv);
@@ -1255,6 +1500,22 @@ function displayChatMessages(messages) {
 
   // Scroll to bottom
   messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+}
+
+function addMarkAsReadButton() {
+  const markReadBtn = $(`
+    <button type="button" id="mark-read-btn" class="btn btn-outline" style="margin-left: 10px;">
+      Mark as Read
+    </button>
+  `);
+
+  $("#chat-header").append(markReadBtn);
+
+  $("#mark-read-btn").click(() => {
+    if (currentChatUser) {
+      markMessagesAsRead(currentChatUser);
+    }
+  });
 }
 
 function sendMessage() {

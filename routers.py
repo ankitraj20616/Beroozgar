@@ -454,21 +454,38 @@ def get_chat_contacts(user_email: str = Depends(check_who_loged_in), db: Session
             )
         ).order_by(desc(ChatMessage.Timestamp)).first()
 
-        # Count unread messages from contact
-        unread_count = db.query(func.count()).filter(
-            ChatMessage.SenderEmail == contact_email,
-            ChatMessage.ReceiverEmail == user_email,
-            ChatMessage.is_read == False  
-        ).scalar()
-
         result.append({
             "email": contact_email,
             "name": user.Name if user else None,
             "last_message": last_msg.Message if last_msg else None,
-            "unread_count": unread_count or 0
         })
-
     return result
+
+@router.get("/count-unread-messages")
+def count_unread_messages(friend_email: str ,user_email: str = Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    messages = db.query(ChatMessage).filter(
+        (ChatMessage.SenderEmail == user_email) & (ChatMessage.ReceiverEmail == friend_email)
+    ).all()
+    if not messages:
+        return "Nothing in chat"
+    unread_count = 0
+    for mesg in messages:
+        if mesg.is_read == False:
+            unread_count += 1
+    return unread_count
+
+
+@router.patch("/mark_as_read")
+def mark_as_read(friend_email: str ,user_email: str = Depends(check_who_loged_in), db: Session = Depends(get_db)):
+    messages = db.query(ChatMessage).filter(
+        (ChatMessage.SenderEmail == user_email) & (ChatMessage.ReceiverEmail == friend_email)
+    ).all()
+    if not messages:
+        return "Nothing in chat"
+    for mesg in messages:
+        mesg.is_read = True
+    db.commit()
+    return "Marked read"
 
 
 @router.get("/check-registered-email")
