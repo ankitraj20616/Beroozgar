@@ -18,12 +18,15 @@ class UserRead(UserBase):
     )
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    email: Optional[EmailStr]
-    phone: Optional[str]
-    skills: Optional[str]
-    experience: Optional[str]
-    education: Optional[str]
+    Name: Optional[str]
+    Email: Optional[EmailStr]
+    Phone: Optional[str]
+    Skills: Optional[str]
+    Experience: Optional[str]
+    Education: Optional[str]
+
+class UserReturn(UserUpdate):
+    Resume: Optional[str]
 
 
 class UserLogin(BaseModel):
@@ -45,6 +48,12 @@ class RecruiterBase(BaseModel):
     email: EmailStr
     company: str
     phone: str
+
+class RecruiterUpdate(BaseModel):
+    Name: Optional[str]
+    Email: Optional[EmailStr]
+    Company: Optional[str]
+    Phone: Optional[str]
 
 class RecruiterCreate(RecruiterBase):
     pass

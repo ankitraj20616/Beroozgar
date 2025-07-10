@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
-from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate
+from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate, RecruiterUpdate, UserReturn
 from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
@@ -121,31 +121,55 @@ def protected_route(request: Request, db: Session= Depends(get_db)):
 def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= Depends(get_db)):
     user = db.query(User).filter(User.Email == email).first()
     if user:
-        return user
+        return UserReturn(
+            Name = user.Name,
+            Email = user.Email,
+            Phone = user.Phone,
+            Skills = user.Skills,
+            Experience = user.Experience,
+            Education = user.Education,
+            Resume = f"/users/{user.UserID}/resume"
+        )
     recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
     if recruiter:
-        return recruiter
+        return RecruiterUpdate(
+            Name = recruiter.Name,
+            Email = recruiter.Email,
+            Company = recruiter.Company,
+            Phone = recruiter.Phone
+        )
     raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
 
 @router.patch("/update-your-details")
-def update_your_details(updated_data: UserUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+def update_your_details(updated_data: UserUpdate | RecruiterUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
     user_type = check_user_type(email= email, db= db)
     if user_type == "user":
         curr_user = db.query(User).filter(User.Email == email).first()
+        if updated_data.Name is not None:
+            curr_user.Name = updated_data.Name
+        if updated_data.Phone is not None:
+            curr_user.Phone = updated_data.Phone
+        if updated_data.Email is not None:
+            curr_user.Email = updated_data.Email
+        if updated_data.Skills is not None:
+            curr_user.Skills = updated_data.Skills
+        if updated_data.Experience is not None:
+            curr_user.Experience = updated_data.Experience
+        if updated_data.Education is not None:
+            curr_user.Education = updated_data.Education
     elif user_type == "recruiter":
         curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+        if updated_data.Name is not None:
+            curr_user.Name = updated_data.Name
+        if updated_data.Email is not None:
+            curr_user.Email = updated_data.Email
+        if updated_data.Company is not None:
+            curr_user.Company = updated_data.Company
+        if updated_data.Phone is not None:
+            curr_user.Phone = updated_data.Phone
     else:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
-    if updated_data.name is not None:
-        curr_user.Name = updated_data.name
-    if updated_data.phone is not None:
-        curr_user.Phone = updated_data.phone
-    if updated_data.skills is not None:
-        curr_user.Skills = updated_data.skills
-    if updated_data.experience is not None:
-        curr_user.Experience = updated_data.experience
-    if updated_data.education is not None:
-        curr_user.Education = updated_data.education
+    
     db.commit()
     db.refresh(curr_user)
     return {"message": "User details updated successfully."}
@@ -298,7 +322,6 @@ async def apply_for_job(job_id: int, user_email: str= Depends(check_who_loged_in
         ResumeScore = score,
         AI_Review = review,
         Status = "Applied"
-
     )
     db.add(application)
     db.commit()
@@ -400,16 +423,16 @@ async def schedule_interview(application_id: int, date: str, mode: str, recruite
     
 
 
-@router.get("/download-resume/{user_id}")
-def download_resume(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.UserID == user_id).first()
+@router.get("/download-resume/{user_email}")
+def download_resume(user_email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.Email == user_email).first()
     if not user or not user.Resume:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Resume not found.")
     resume = BytesIO(user.Resume)
     return StreamingResponse(
         resume,
         media_type= "application/pdf",
-        headers= {"Content-Disposition": f"attachment; filename=resume_user_{user_id}.pdf"}
+        headers= {"Content-Disposition": f"attachment; filename=resume_user_{user_email}.pdf"}
     )
 
 
