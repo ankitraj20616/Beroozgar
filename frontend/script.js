@@ -522,7 +522,7 @@ function handleProfileUpdate(e) {
     url: `${API_BASE}/update-your-details`,
     method: "PATCH",
     contentType: "application/json",
-    data: JSON.stringify(updateData),
+    data: f,
     xhrFields: {
       withCredentials: true,
     },

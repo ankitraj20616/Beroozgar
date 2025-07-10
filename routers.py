@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
-from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate, RecruiterUpdate, UserReturn
+from schemas import RecruiterReturn, UserLogin, RecruiterCreate, JobCreate, UpdateRequest, UserReturn
 from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
@@ -132,7 +132,7 @@ def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= 
         )
     recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
     if recruiter:
-        return RecruiterUpdate(
+        return RecruiterReturn(
             Name = recruiter.Name,
             Email = recruiter.Email,
             Company = recruiter.Company,
@@ -141,32 +141,22 @@ def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= 
     raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
 
 @router.patch("/update-your-details")
-def update_your_details(updated_data: UserUpdate | RecruiterUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+def update_your_details(updated_data: UpdateRequest = Body(..., embed = True), email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
     user_type = check_user_type(email= email, db= db)
     if user_type == "user":
         curr_user = db.query(User).filter(User.Email == email).first()
-        if updated_data.Name is not None:
-            curr_user.Name = updated_data.Name
-        if updated_data.Phone is not None:
-            curr_user.Phone = updated_data.Phone
-        if updated_data.Email is not None:
-            curr_user.Email = updated_data.Email
-        if updated_data.Skills is not None:
-            curr_user.Skills = updated_data.Skills
-        if updated_data.Experience is not None:
-            curr_user.Experience = updated_data.Experience
-        if updated_data.Education is not None:
-            curr_user.Education = updated_data.Education
+        if updated_data.name: curr_user.Name = updated_data.name
+        if updated_data.phone: curr_user.Phone = updated_data.phone
+        if updated_data.email: curr_user.Email = updated_data.email
+        if updated_data.skills: curr_user.Skills = updated_data.skills
+        if updated_data.experience: curr_user.Experience = updated_data.experience
+        if updated_data.education: curr_user.Education = updated_data.education
     elif user_type == "recruiter":
         curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
-        if updated_data.Name is not None:
-            curr_user.Name = updated_data.Name
-        if updated_data.Email is not None:
-            curr_user.Email = updated_data.Email
-        if updated_data.Company is not None:
-            curr_user.Company = updated_data.Company
-        if updated_data.Phone is not None:
-            curr_user.Phone = updated_data.Phone
+        if updated_data.name: curr_user.Name = updated_data.name
+        if updated_data.email: curr_user.Email = updated_data.email
+        if updated_data.company: curr_user.Company = updated_data.company
+        if updated_data.phone: curr_user.Phone = updated_data.phone
     else:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
     
