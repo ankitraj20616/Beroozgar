@@ -3,7 +3,11 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
+<<<<<<< HEAD
 from schemas import RecruiterReturn, UserLogin, RecruiterCreate, JobCreate, UpdateRequest, UserReturn
+=======
+from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate
+>>>>>>> parent of 75908df (Update user data updation)
 from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
@@ -121,17 +125,10 @@ def protected_route(request: Request, db: Session= Depends(get_db)):
 def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= Depends(get_db)):
     user = db.query(User).filter(User.Email == email).first()
     if user:
-        return UserReturn(
-            Name = user.Name,
-            Email = user.Email,
-            Phone = user.Phone,
-            Skills = user.Skills,
-            Experience = user.Experience,
-            Education = user.Education,
-            Resume = f"/users/{user.UserID}/resume"
-        )
+        return user
     recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
     if recruiter:
+<<<<<<< HEAD
         return RecruiterReturn(
             Name = recruiter.Name,
             Email = recruiter.Email,
@@ -157,9 +154,30 @@ def update_your_details(updated_data: UpdateRequest = Body(..., embed = True), e
         if updated_data.email: curr_user.Email = updated_data.email
         if updated_data.company: curr_user.Company = updated_data.company
         if updated_data.phone: curr_user.Phone = updated_data.phone
+=======
+        return recruiter
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+
+@router.patch("/update-your-details")
+def update_your_details(updated_data: UserUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+>>>>>>> parent of 75908df (Update user data updation)
     else:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
-    
+    if updated_data.name is not None:
+        curr_user.Name = updated_data.name
+    if updated_data.phone is not None:
+        curr_user.Phone = updated_data.phone
+    if updated_data.skills is not None:
+        curr_user.Skills = updated_data.skills
+    if updated_data.experience is not None:
+        curr_user.Experience = updated_data.experience
+    if updated_data.education is not None:
+        curr_user.Education = updated_data.education
     db.commit()
     db.refresh(curr_user)
     return {"message": "User details updated successfully."}
@@ -312,6 +330,7 @@ async def apply_for_job(job_id: int, user_email: str= Depends(check_who_loged_in
         ResumeScore = score,
         AI_Review = review,
         Status = "Applied"
+
     )
     db.add(application)
     db.commit()
@@ -413,16 +432,16 @@ async def schedule_interview(application_id: int, date: str, mode: str, recruite
     
 
 
-@router.get("/download-resume/{user_email}")
-def download_resume(user_email: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.Email == user_email).first()
+@router.get("/download-resume/{user_id}")
+def download_resume(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.UserID == user_id).first()
     if not user or not user.Resume:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Resume not found.")
     resume = BytesIO(user.Resume)
     return StreamingResponse(
         resume,
         media_type= "application/pdf",
-        headers= {"Content-Disposition": f"attachment; filename=resume_user_{user_email}.pdf"}
+        headers= {"Content-Disposition": f"attachment; filename=resume_user_{user_id}.pdf"}
     )
 
 
