@@ -19,16 +19,12 @@ class UserRead(UserBase):
 
 class UserUpdate(BaseModel):
     name: Optional[str]
-<<<<<<< HEAD
     email: Optional[EmailStr] = None
-=======
     email: Optional[EmailStr]
->>>>>>> parent of 75908df (Update user data updation)
     phone: Optional[str]
     skills: Optional[str]
     experience: Optional[str]
     education: Optional[str]
-<<<<<<< HEAD
     resume: Optional[str] = None
 
 class UserReturn(BaseModel):
@@ -39,8 +35,7 @@ class UserReturn(BaseModel):
     Experience: Optional[str]
     Education: Optional[str]
     Resume: Optional[str]
-=======
->>>>>>> parent of 75908df (Update user data updation)
+
 
 
 class UserLogin(BaseModel):
@@ -63,7 +58,7 @@ class RecruiterBase(BaseModel):
     company: str
     phone: str
 
-<<<<<<< HEAD
+
 class RecruiterReturn(BaseModel):
     Name: Optional[str]
     Email: Optional[EmailStr] = None
@@ -79,8 +74,7 @@ class RecruiterUpdate(BaseModel):
 
 UpdateRequest = Union[UserUpdate, RecruiterUpdate]
 
-=======
->>>>>>> parent of 75908df (Update user data updation)
+
 class RecruiterCreate(RecruiterBase):
     pass
     model_config = ConfigDict(
