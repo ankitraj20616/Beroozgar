@@ -3,268 +3,865 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JobPortal - Find Your Dream Job</title>
+    <title>Broozgar - Your Gateway to Dream Careers</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <!-- Navigation -->
     <nav class="navbar">
       <div class="nav-container">
         <div class="nav-logo">
-          <h2>Beroozgar</h2>
-        </div>
-        <div class="nav-menu" id="nav-menu">
-          <a href="#" class="nav-link" data-page="home">Home</a>
-          <a href="#" class="nav-link" data-page="jobs">Jobs</a>
-          <a href="#" class="nav-link" data-page="about">About</a>
-          <div class="auth-buttons" id="auth-buttons">
-            <button class="btn btn-outline" id="login-btn">Login</button>
-            <button class="btn btn-primary" id="signup-btn">Sign Up</button>
+          <div class="logo-icon">
+            <i class="fas fa-briefcase"></i>
           </div>
-          <div class="user-menu" id="user-menu" style="display: none">
-            <button class="btn btn-outline" id="dashboard-btn">
-              Dashboard
-            </button>
-            <button class="btn btn-outline" id="profile-btn">Profile</button>
-            <button class="btn btn-outline" id="notifications-btn">
-              Notifications
-            </button>
-            <button class="btn btn-outline" id="chat-btn">Chat</button>
-            <button class="btn btn-outline" id="logout-btn">Logout</button>
+          <div class="logo-text">
+            <h2>Broozgar</h2>
+            <span class="tagline">Find Your Future</span>
           </div>
         </div>
+
+        <div class="nav-menu">
+          <a href="#" class="nav-link" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+          <a href="#" class="nav-link" data-page="jobs">
+            <i class="fas fa-search"></i>
+            <span>Jobs</span>
+          </a>
+          <a href="#" class="nav-link" data-page="about">
+            <i class="fas fa-info-circle"></i>
+            <span>About</span>
+          </a>
+          <a href="#" class="nav-link" data-page="contact">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+          </a>
+        </div>
+
+        <div class="nav-actions">
+          <div id="auth-buttons">
+            <button class="btn btn-outline" id="login-btn">
+              <i class="fas fa-sign-in-alt"></i>
+              Login
+            </button>
+            <button class="btn btn-primary" id="signup-btn">
+              <i class="fas fa-user-plus"></i>
+              Join Now
+            </button>
+          </div>
+
+          <div id="user-menu" class="user-menu" style="display: none">
+            <div class="user-avatar" id="user-avatar">
+              <span id="user-avatar-text">U</span>
+              <div class="status-indicator"></div>
+            </div>
+            <div class="user-dropdown">
+              <div class="dropdown-header">
+                <span id="user-name-dropdown">User</span>
+                <small id="user-type-dropdown">Job Seeker</small>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="#" id="dashboard-btn">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+              </a>
+              <a href="#" id="profile-btn">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+              <a href="#" id="notifications-btn">
+                <i class="fas fa-bell"></i>
+                Notifications
+                <span
+                  class="notification-badge"
+                  id="notification-count"
+                  style="display: none"
+                  >0</span
+                >
+              </a>
+              <a href="#" id="chat-btn">
+                <i class="fas fa-comments"></i>
+                Messages
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </div>
+          </div>
+        </div>
+
         <div class="hamburger" id="hamburger">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
     </nav>
 
     <!-- Main Content -->
-    <main id="main-content">
+    <main class="main-content">
       <!-- Home Page -->
-      <div id="home-page" class="page active">
-        <section class="hero">
-          <div class="hero-content">
-            <h1>Find Your Dream Job Today</h1>
-            <p>
-              Connect with top employers and discover opportunities that match
-              your skills and aspirations.
-            </p>
-            <div class="hero-buttons">
-              <button class="btn btn-primary btn-large" id="hero-signup">
-                Get Started
-              </button>
-              <button class="btn btn-outline btn-large" id="hero-browse">
-                Browse Jobs
-              </button>
+      <section id="home-page" class="page active">
+        <!-- Hero Section -->
+        <div class="hero-section">
+          <div class="hero-background">
+            <div class="floating-shapes">
+              <div class="shape shape-1"></div>
+              <div class="shape shape-2"></div>
+              <div class="shape shape-3"></div>
+              <div class="shape shape-4"></div>
             </div>
           </div>
-        </section>
-
-        <section class="features">
           <div class="container">
-            <h2>Why Choose Beroozgar?</h2>
-            <div class="features-grid">
-              <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Smart Matching</h3>
-                <p>
-                  AI-powered resume scoring to match you with the perfect job
-                  opportunities.
+            <div class="hero-content">
+              <div class="hero-text">
+                <div class="hero-badge">
+                  <i class="fas fa-star"></i>
+                  <span>India's #1 Job Portal</span>
+                </div>
+                <h1 class="hero-title">
+                  Find Your Dream
+                  <span class="gradient-text">Career</span>
+                  with Broozgar
+                </h1>
+                <p class="hero-description">
+                  Connect with top employers across India and discover
+                  opportunities that match your skills, passion, and career
+                  aspirations. Join thousands of professionals who found their
+                  perfect job through Broozgar.
                 </p>
+                <div class="hero-stats">
+                  <div class="stat-item">
+                    <div class="stat-number" data-count="50000">0</div>
+                    <div class="stat-label">Active Jobs</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number" data-count="25000">0</div>
+                    <div class="stat-label">Companies</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number" data-count="100000">0</div>
+                    <div class="stat-label">Job Seekers</div>
+                  </div>
+                </div>
+                <div class="hero-actions">
+                  <button
+                    class="btn btn-primary btn-large hero-cta"
+                    id="hero-signup"
+                  >
+                    <i class="fas fa-rocket"></i>
+                    Start Your Journey
+                  </button>
+                  <button class="btn btn-outline btn-large" id="hero-browse">
+                    <i class="fas fa-search"></i>
+                    Explore Jobs
+                  </button>
+                </div>
               </div>
-              <div class="feature-card">
-                <div class="feature-icon">💬</div>
+              <div class="hero-image">
+                <div class="image-container">
+                  <img
+                    src="https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=800"
+                    alt="Professional Success"
+                  />
+                  <div class="floating-cards">
+                    <div class="floating-card card-1">
+                      <i class="fas fa-chart-line"></i>
+                      <span>Career Growth</span>
+                    </div>
+                    <div class="floating-card card-2">
+                      <i class="fas fa-handshake"></i>
+                      <span>Perfect Match</span>
+                    </div>
+                    <div class="floating-card card-3">
+                      <i class="fas fa-trophy"></i>
+                      <span>Success Stories</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-section">
+          <div class="container">
+            <div class="section-header">
+              <h2>Why Choose Broozgar?</h2>
+              <p>
+                Experience the future of job searching with our cutting-edge
+                platform designed for Pakistani professionals
+              </p>
+            </div>
+            <div class="features-grid">
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-icon">
+                  <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI-Powered Matching</h3>
+                <p>
+                  Our advanced artificial intelligence analyzes your resume,
+                  skills, and preferences to match you with the perfect job
+                  opportunities that align with your career goals.
+                </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
+              </div>
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-icon">
+                  <i class="fas fa-comments"></i>
+                </div>
                 <h3>Direct Communication</h3>
                 <p>
-                  Chat directly with recruiters and get real-time updates on
-                  your applications.
+                  Chat directly with recruiters and hiring managers in
+                  real-time. Get instant feedback on your applications and build
+                  meaningful professional relationships.
                 </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
               </div>
-              <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Application Tracking</h3>
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-icon">
+                  <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3>Smart Analytics</h3>
                 <p>
-                  Track your job applications and interview schedules in one
-                  place.
+                  Get detailed insights on your job search performance,
+                  application success rates, and personalized recommendations to
+                  improve your career prospects.
                 </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
+              </div>
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-icon">
+                  <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Lightning Fast Applications</h3>
+                <p>
+                  Apply to multiple jobs with one click using our smart
+                  application system. Track all your applications in one
+                  centralized dashboard.
+                </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
+              </div>
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Verified Companies</h3>
+                <p>
+                  All companies on Broozgar are verified and vetted. Apply with
+                  confidence knowing you're connecting with legitimate
+                  employers.
+                </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
+              </div>
+              <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+                <div class="feature-icon">
+                  <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>Career Development</h3>
+                <p>
+                  Access free career resources, skill assessments, and
+                  professional development courses to enhance your
+                  marketability.
+                </p>
+                <div class="feature-link">
+                  <a href="#" class="learn-more"
+                    >Learn More <i class="fas fa-arrow-right"></i
+                  ></a>
+                </div>
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
 
-      <!-- Jobs Page -->
-      <div id="jobs-page" class="page">
-        <div class="container">
-          <div class="jobs-header">
-            <h1>Find Jobs</h1>
-            <div class="search-filters">
-              <div class="search-bar">
-                <input
-                  type="text"
-                  id="job-search-title"
-                  placeholder="Job title or keyword"
-                />
-                <input
-                  type="text"
-                  id="job-search-location"
-                  placeholder="Location"
-                />
-                <input
-                  type="text"
-                  id="job-search-skills"
-                  placeholder="Skills"
-                />
-                <button class="btn btn-primary" id="search-jobs-btn">
-                  Search
+        <!-- Success Stories Section -->
+        <div class="success-stories-section">
+          <div class="container">
+            <div class="section-header">
+              <h2>Success Stories</h2>
+              <p>
+                Real people, real success stories from the Broozgar community
+              </p>
+            </div>
+            <div class="stories-grid">
+              <div class="story-card">
+                <div class="story-content">
+                  <div class="quote-icon">
+                    <i class="fas fa-quote-left"></i>
+                  </div>
+                  <p>
+                    "Broozgar helped me land my dream job at a top tech company
+                    in Karachi. The AI matching was spot-on!"
+                  </p>
+                  <div class="story-author">
+                    <div class="author-avatar">
+                      <img
+                        src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100"
+                        alt="AA"
+                      />
+                    </div>
+                    <div class="author-info">
+                      <h4>AA</h4>
+                      <span>Software Engineer</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="story-card">
+                <div class="story-content">
+                  <div class="quote-icon">
+                    <i class="fas fa-quote-left"></i>
+                  </div>
+                  <p>
+                    "As a recruiter, Broozgar has revolutionized how we find
+                    talent. The quality of candidates is exceptional."
+                  </p>
+                  <div class="story-author">
+                    <div class="author-avatar">
+                      <img
+                        src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100"
+                        alt="AC"
+                      />
+                    </div>
+                    <div class="author-info">
+                      <h4>HC</h4>
+                      <span>HR Manager</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="story-card">
+                <div class="story-content">
+                  <div class="quote-icon">
+                    <i class="fas fa-quote-left"></i>
+                  </div>
+                  <p>
+                    "The career guidance and resources on Broozgar helped me
+                    transition from marketing to data science successfully."
+                  </p>
+                  <div class="story-author">
+                    <div class="author-avatar">
+                      <img
+                        src="https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=100"
+                        alt="Fatima Sheikh"
+                      />
+                    </div>
+                    <div class="author-info">
+                      <h4>ABC</h4>
+                      <span>Data Scientist</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+          <div class="container">
+            <div class="cta-content">
+              <h2>Ready to Transform Your Career?</h2>
+              <p>
+                Join thousands of professionals who have found their dream jobs
+                through Broozgar
+              </p>
+              <div class="cta-buttons">
+                <button class="btn btn-primary btn-large" id="cta-signup">
+                  <i class="fas fa-user-plus"></i>
+                  Create Free Account
+                </button>
+                <button class="btn btn-outline btn-large" id="cta-browse">
+                  <i class="fas fa-search"></i>
+                  Browse Jobs
                 </button>
               </div>
             </div>
           </div>
-          <div class="jobs-container">
-            <div id="jobs-list" class="jobs-list">
+        </div>
+      </section>
+
+      <!-- Jobs Page -->
+      <section id="jobs-page" class="page">
+        <div class="container">
+          <div class="page-header">
+            <h1>Discover Your Next Opportunity</h1>
+            <p>
+              Explore thousands of job opportunities from Pakistan's top
+              companies
+            </p>
+          </div>
+
+          <div class="job-search-section">
+            <div class="search-container">
+              <div class="search-header">
+                <h3>Find Your Perfect Job</h3>
+                <p>
+                  Use our advanced filters to find jobs that match your
+                  preferences
+                </p>
+              </div>
+              <div class="search-form">
+                <div class="search-group">
+                  <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input
+                      type="text"
+                      id="job-search-title"
+                      placeholder="Job title, keywords, or company..."
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input
+                      type="text"
+                      id="job-search-location"
+                      placeholder="City or location"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <i class="fas fa-code"></i>
+                    <input
+                      type="text"
+                      id="job-search-skills"
+                      placeholder="Skills (e.g., JavaScript, Python)"
+                      class="form-control"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary search-btn"
+                    id="search-jobs-btn"
+                  >
+                    <i class="fas fa-search"></i>
+                    Search Jobs
+                  </button>
+                </div>
+              </div>
+              <div class="quick-filters">
+                <span class="filter-label">Popular searches:</span>
+                <div class="filter-tags">
+                  <button class="filter-tag" data-search="Software Engineer">
+                    Software Engineer
+                  </button>
+                  <button class="filter-tag" data-search="Marketing Manager">
+                    Marketing Manager
+                  </button>
+                  <button class="filter-tag" data-search="Data Analyst">
+                    Data Analyst
+                  </button>
+                  <button class="filter-tag" data-search="Graphic Designer">
+                    Graphic Designer
+                  </button>
+                  <button class="filter-tag" data-search="Sales Executive">
+                    Sales Executive
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="jobs-results">
+            <div class="results-header">
+              <div class="results-info">
+                <h3 id="jobs-count">Loading jobs...</h3>
+                <p>Fresh opportunities updated daily</p>
+              </div>
+              <div class="sort-options">
+                <select id="sort-jobs" class="form-control">
+                  <option value="newest">Newest First</option>
+                  <option value="salary">Highest Salary</option>
+                  <option value="relevance">Most Relevant</option>
+                </select>
+              </div>
+            </div>
+            <div id="jobs-list" class="jobs-grid">
               <!-- Jobs will be loaded here -->
+            </div>
+            <div class="load-more-container">
+              <button class="btn btn-outline" id="load-more-jobs">
+                <i class="fas fa-plus"></i>
+                Load More Jobs
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Profile Page -->
-      <div id="profile-page" class="page">
+      <!-- Dashboard Page -->
+      <section id="dashboard-page" class="page">
         <div class="container">
-          <div class="profile-header">
-            <h1>My Profile</h1>
-            <button class="btn btn-primary" id="edit-profile-btn">
-              Edit Profile
-            </button>
+          <div class="dashboard-header">
+            <div class="welcome-section">
+              <h1 id="dashboard-title">Welcome Back!</h1>
+              <p id="dashboard-subtitle">
+                Here's what's happening with your job search
+              </p>
+            </div>
+            <div class="dashboard-stats">
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fas fa-paper-plane"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-number" id="total-applications">0</div>
+                  <div class="stat-label">Total Applications</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-number" id="pending-applications">0</div>
+                  <div class="stat-label">Pending</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-number" id="interviews-scheduled">0</div>
+                  <div class="stat-label">Interviews</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-number" id="profile-views">0</div>
+                  <div class="stat-label">Profile Views</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="profile-content">
-            <!-- Profile View Mode -->
-            <div id="profile-view" class="profile-section">
-              <div class="profile-card">
-                <div class="profile-avatar">
-                  <div class="avatar-placeholder">
-                    <span id="profile-avatar-text">U</span>
+          <div class="dashboard-content">
+            <div class="dashboard-tabs">
+              <button
+                class="tab-btn active"
+                data-tab="applications"
+                id="applications-tab"
+              >
+                <i class="fas fa-list"></i>
+                Applications
+              </button>
+              <button class="tab-btn" data-tab="jobs" id="jobs-tab">
+                <i class="fas fa-briefcase"></i>
+                My Jobs
+              </button>
+              <button class="tab-btn" data-tab="create-job" id="create-job-tab">
+                <i class="fas fa-plus"></i>
+                Create Job
+              </button>
+            </div>
+
+            <div class="tab-content">
+              <div id="applications-tab-content" class="tab-pane active">
+                <div id="applications-list"></div>
+                <div id="recruiter-jobs-list"></div>
+              </div>
+
+              <div id="jobs-tab-content" class="tab-pane">
+                <div id="my-jobs-list"></div>
+              </div>
+
+              <div id="create-job-tab-content" class="tab-pane">
+                <div class="create-job-form">
+                  <div class="form-header">
+                    <h3>Post a New Job</h3>
+                    <p>Attract the best talent with a compelling job posting</p>
                   </div>
+                  <form id="create-job-form">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label
+                          ><i class="fas fa-briefcase"></i> Job Title</label
+                        >
+                        <input
+                          type="text"
+                          id="job-title"
+                          class="form-control"
+                          placeholder="e.g., Senior Software Engineer"
+                          required
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label
+                          ><i class="fas fa-map-marker-alt"></i> Location</label
+                        >
+                        <input
+                          type="text"
+                          id="job-location"
+                          class="form-control"
+                          placeholder="e.g., Karachi, Pakistan"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label
+                        ><i class="fas fa-align-left"></i> Job
+                        Description</label
+                      >
+                      <textarea
+                        id="job-description"
+                        class="form-control"
+                        rows="6"
+                        placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."
+                        required
+                      ></textarea>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label
+                          ><i class="fas fa-code"></i> Skills Required</label
+                        >
+                        <input
+                          type="text"
+                          id="job-skills"
+                          class="form-control"
+                          placeholder="e.g., JavaScript, Python, React"
+                          required
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label
+                          ><i class="fas fa-chart-line"></i> Experience
+                          Required</label
+                        >
+                        <input
+                          type="text"
+                          id="job-experience"
+                          class="form-control"
+                          placeholder="e.g., 2-3 years"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label
+                          ><i class="fas fa-money-bill-wave"></i> Salary
+                          Range</label
+                        >
+                        <input
+                          type="text"
+                          id="job-salary"
+                          class="form-control"
+                          placeholder="e.g., PKR 80,000 - 120,000"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label><i class="fas fa-toggle-on"></i> Status</label>
+                        <select id="job-status" class="form-control">
+                          <option value="Open">Open</option>
+                          <option value="Closed">Closed</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large">
+                      <i class="fas fa-paper-plane"></i>
+                      Post Job
+                    </button>
+                  </form>
                 </div>
-                <div class="profile-info">
-                  <h2 id="profile-name">John Doe</h2>
-                  <p id="profile-email">john.doe@example.com</p>
-                  <p id="profile-phone">+1 (555) 123-4567</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Page -->
+      <section id="profile-page" class="page">
+        <div class="container">
+          <div class="profile-container">
+            <div id="profile-view" class="profile-section">
+              <div class="profile-header">
+                <div class="profile-cover">
+                  <div class="cover-gradient"></div>
+                </div>
+                <div class="profile-main">
+                  <div class="profile-avatar">
+                    <span id="profile-avatar-text">U</span>
+                    <div class="avatar-badge">
+                      <i class="fas fa-check"></i>
+                    </div>
+                  </div>
+                  <div class="profile-info">
+                    <h1 id="profile-name">Loading...</h1>
+                    <p class="profile-title" id="profile-email">Loading...</p>
+                    <p class="profile-contact" id="profile-phone">
+                      <i class="fas fa-phone"></i>
+                      Loading...
+                    </p>
+                    <p
+                      class="profile-company"
+                      id="profile-company"
+                      style="display: none"
+                    >
+                      <i class="fas fa-building"></i>
+                      Loading...
+                    </p>
+                  </div>
+                  <div class="profile-actions">
+                    <button class="btn btn-primary" id="edit-profile-btn">
+                      <i class="fas fa-edit"></i>
+                      Edit Profile
+                    </button>
+                    <button class="btn btn-danger" id="delete-account-btn">
+                      <i class="fas fa-trash"></i>
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div class="profile-details">
                 <div class="detail-section">
-                  <h3>Skills</h3>
-                  <div id="profile-skills" class="skills-tags">
-                    <span class="skill-tag">JavaScript</span>
-                    <span class="skill-tag">React</span>
-                    <span class="skill-tag">Node.js</span>
+                  <div class="section-header">
+                    <h3><i class="fas fa-code"></i> Skills</h3>
                   </div>
+                  <div id="profile-skills" class="skills-container"></div>
                 </div>
-
                 <div class="detail-section">
-                  <h3>Experience</h3>
-                  <p id="profile-experience">3 years in software development</p>
-                </div>
-
-                <div class="detail-section">
-                  <h3>Education</h3>
-                  <p id="profile-education">Bachelor's in Computer Science</p>
-                </div>
-
-                <div class="detail-section">
-                  <h3>Company</h3>
-                  <p id="profile-company" style="display: none">
-                    Tech Solutions Inc.
-                  </p>
-                </div>
-
-                <div class="detail-section">
-                  <h3>Resume</h3>
-                  <div id="profile-resume">
-                    <a href="#" class="btn btn-outline btn-small"
-                      >Download Resume</a
-                    >
+                  <div class="section-header">
+                    <h3><i class="fas fa-briefcase"></i> Experience</h3>
                   </div>
+                  <p id="profile-experience"></p>
+                </div>
+                <div class="detail-section">
+                  <div class="section-header">
+                    <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+                  </div>
+                  <p id="profile-education"></p>
+                </div>
+                <div class="detail-section">
+                  <div class="section-header">
+                    <h3><i class="fas fa-file-pdf"></i> Resume</h3>
+                  </div>
+                  <div id="profile-resume"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Profile Edit Mode -->
             <div
               id="profile-edit"
               class="profile-section"
               style="display: none"
             >
-              <form id="profile-edit-form" class="form">
-                <div class="form-group">
-                  <label for="edit-name">Full Name</label>
-                  <input type="text" id="edit-name" name="name" required />
-                </div>
+              <div class="profile-edit-header">
+                <h2><i class="fas fa-user-edit"></i> Edit Profile</h2>
+                <button class="btn btn-outline" id="cancel-edit-btn">
+                  <i class="fas fa-times"></i>
+                  Cancel
+                </button>
+              </div>
 
-                <div class="form-group">
-                  <label for="edit-email">Email</label>
-                  <input type="email" id="edit-email" name="email" required />
+              <form id="profile-edit-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" id="edit-name" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="edit-email" class="form-control" />
+                  </div>
                 </div>
-
-                <div class="form-group">
-                  <label for="edit-phone">Phone</label>
-                  <input type="tel" id="edit-phone" name="phone" required />
+                <div class="form-row">
+                  <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Phone</label>
+                    <input type="tel" id="edit-phone" class="form-control" />
+                  </div>
+                  <div class="form-group" id="edit-company-group">
+                    <label><i class="fas fa-building"></i> Company</label>
+                    <input type="text" id="edit-company" class="form-control" />
+                  </div>
                 </div>
-
                 <div class="form-group" id="edit-skills-group">
-                  <label for="edit-skills">Skills</label>
+                  <label><i class="fas fa-code"></i> Skills</label>
                   <input
                     type="text"
                     id="edit-skills"
-                    name="skills"
+                    class="form-control"
                     placeholder="e.g., JavaScript, Python, React"
                   />
                 </div>
-
                 <div class="form-group" id="edit-experience-group">
-                  <label for="edit-experience">Experience</label>
-                  <input
-                    type="text"
+                  <label><i class="fas fa-briefcase"></i> Experience</label>
+                  <textarea
                     id="edit-experience"
-                    name="experience"
-                    placeholder="e.g., 3 years"
-                  />
+                    class="form-control"
+                    rows="4"
+                  ></textarea>
                 </div>
-
                 <div class="form-group" id="edit-education-group">
-                  <label for="edit-education">Education</label>
-                  <input type="text" id="edit-education" name="education" />
+                  <label><i class="fas fa-graduation-cap"></i> Education</label>
+                  <textarea
+                    id="edit-education"
+                    class="form-control"
+                    rows="4"
+                  ></textarea>
                 </div>
-
-                <div
-                  class="form-group"
-                  id="edit-company-group"
-                  style="display: none"
-                >
-                  <label for="edit-company">Company</label>
-                  <input type="text" id="edit-company" name="company" />
-                </div>
-
                 <div class="form-group" id="edit-resume-group">
-                  <label for="edit-resume">Resume (PDF)</label>
+                  <label><i class="fas fa-file-upload"></i> Resume</label>
                   <input
                     type="file"
                     id="edit-resume"
-                    name="resume"
-                    accept=".pdf"
+                    class="form-control"
+                    accept=".pdf,.doc,.docx"
                   />
-                  <small>Leave empty to keep current resume</small>
+                  <button
+                    type="button"
+                    class="btn btn-outline btn-small"
+                    id="update-resume-btn"
+                  >
+                    <i class="fas fa-upload"></i>
+                    Update Resume
+                  </button>
                 </div>
-
                 <div class="form-actions">
                   <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
                     Save Changes
                   </button>
                   <button
@@ -272,6 +869,7 @@
                     class="btn btn-outline"
                     id="cancel-edit-btn"
                   >
+                    <i class="fas fa-times"></i>
                     Cancel
                   </button>
                 </div>
@@ -279,222 +877,478 @@
             </div>
           </div>
         </div>
-      </div>
-      <!-- Dashboard Page -->
-      <div id="dashboard-page" class="page">
-        <div class="container">
-          <div class="dashboard-header">
-            <h1 id="dashboard-title">Dashboard</h1>
-            <div class="dashboard-tabs">
-              <button class="tab-btn active" data-tab="overview">
-                Overview
-              </button>
-              <button
-                class="tab-btn"
-                data-tab="applications"
-                id="applications-tab"
-              >
-                Applications
-              </button>
-              <button
-                class="tab-btn"
-                data-tab="jobs"
-                id="jobs-tab"
-                style="display: none"
-              >
-                My Jobs
-              </button>
-              <button
-                class="tab-btn"
-                data-tab="create-job"
-                id="create-job-tab"
-                style="display: none"
-              >
-                Create Job
-              </button>
-            </div>
-          </div>
-
-          <div class="dashboard-content">
-            <!-- Overview Tab -->
-            <div id="overview-tab" class="tab-content active">
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <h3 id="total-applications">0</h3>
-                  <p>Total Applications</p>
-                </div>
-                <div class="stat-card">
-                  <h3 id="pending-applications">0</h3>
-                  <p>Pending</p>
-                </div>
-                <div class="stat-card">
-                  <h3 id="interviews-scheduled">0</h3>
-                  <p>Interviews</p>
-                </div>
-              </div>
-              <div class="recent-activity">
-                <h3>Recent Activity</h3>
-                <div id="recent-activity-list">
-                  <!-- Recent activity items -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Applications Tab -->
-            <div id="applications-tab-content" class="tab-content">
-              <div id="applications-list">
-                <!-- Applications will be loaded here -->
-              </div>
-            </div>
-
-            <!-- My Jobs Tab (Recruiter) -->
-            <div id="jobs-tab-content" class="tab-content">
-              <div id="recruiter-jobs-list">
-                <!-- Recruiter jobs will be loaded here -->
-              </div>
-            </div>
-
-            <!-- Create Job Tab (Recruiter) -->
-            <div id="create-job-tab-content" class="tab-content">
-              <form id="create-job-form" class="form">
-                <h3>Create New Job</h3>
-                <div class="form-group">
-                  <label for="job-title">Job Title</label>
-                  <input type="text" id="job-title" name="title" required />
-                </div>
-                <div class="form-group">
-                  <label for="job-description">Job Description</label>
-                  <textarea
-                    id="job-description"
-                    name="description"
-                    rows="5"
-                    required
-                  ></textarea>
-                </div>
-                <div class="form-group">
-                  <label for="job-skills">Skills Required</label>
-                  <input
-                    type="text"
-                    id="job-skills"
-                    name="skills_required"
-                    placeholder="e.g., JavaScript, React, Node.js"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="job-experience">Experience Required</label>
-                  <input
-                    type="text"
-                    id="job-experience"
-                    name="experience_required"
-                    placeholder="e.g., 2-3 years"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="job-salary">Salary</label>
-                  <input
-                    type="text"
-                    id="job-salary"
-                    name="salary"
-                    placeholder="e.g., $50,000 - $70,000"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="job-location">Location</label>
-                  <input
-                    type="text"
-                    id="job-location"
-                    name="location"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="job-status">Status</label>
-                  <select id="job-status" name="status">
-                    <option value="Open">Open</option>
-                    <option value="Closed">Closed</option>
-                  </select>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  Create Job
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
 
       <!-- Notifications Page -->
-      <div id="notifications-page" class="page">
+      <section id="notifications-page" class="page">
         <div class="container">
-          <h1>Notifications</h1>
-          <div id="notifications-list" class="notifications-list">
-            <!-- Notifications will be loaded here -->
+          <div class="page-header">
+            <h1><i class="fas fa-bell"></i> Notifications</h1>
+            <p>Stay updated with your applications and messages</p>
+          </div>
+          <div class="notifications-container">
+            <div class="notifications-header">
+              <div class="notifications-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="unread">Unread</button>
+                <button class="filter-btn" data-filter="applications">
+                  Applications
+                </button>
+                <button class="filter-btn" data-filter="messages">
+                  Messages
+                </button>
+              </div>
+              <button class="btn btn-outline btn-small" id="mark-all-read">
+                <i class="fas fa-check-double"></i>
+                Mark All Read
+              </button>
+            </div>
+            <div id="notifications-list" class="notifications-list">
+              <!-- Notifications will be loaded here -->
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Chat Page -->
-      <div id="chat-page" class="page">
+      <section id="chat-page" class="page">
         <div class="container">
           <div class="chat-container">
             <div class="chat-sidebar">
-              <h3>Conversations</h3>
-              <div id="chat-contacts" class="chat-contacts">
-                <!-- Chat contacts will be loaded here -->
+              <div class="chat-sidebar-header">
+                <h3><i class="fas fa-comments"></i> Messages</h3>
+                <button class="btn btn-primary btn-small" id="new-chat-btn">
+                  <i class="fas fa-plus"></i>
+                  New Chat
+                </button>
+              </div>
+              <div id="chat-contacts" class="contacts-list">
+                <!-- Contacts will be loaded here -->
               </div>
             </div>
             <div class="chat-main">
-              <div class="chat-header">
-                <h3 id="chat-with">Select a conversation</h3>
+              <!-- <div id="chat-area" class="chat-area" style="display: none"> -->
+              <div class="chat-header" id="chat-header">
+                <div class="chat-user-info">
+                  <div class="chat-avatar">
+                    <span id="chat-user-initial">U</span>
+                    <div class="online-status"></div>
+                  </div>
+                  <div class="chat-user-details">
+                    <h4 id="chat-with">Select a contact</h4>
+                    <span class="last-seen">Last seen recently</span>
+                  </div>
+                </div>
+                <div class="chat-actions">
+                  <button class="btn btn-outline btn-small" id="chat-info-btn">
+                    <i class="fas fa-info-circle"></i>
+                  </button>
+                </div>
               </div>
               <div id="chat-messages" class="chat-messages">
-                <!-- Chat messages will be displayed here -->
+                <!-- Messages will be loaded here -->
               </div>
               <div class="chat-input">
-                <input
-                  type="text"
-                  id="message-input"
-                  placeholder="Type a message..."
-                  disabled
-                />
-                <button id="send-message-btn" class="btn btn-primary" disabled>
-                  Send
-                </button>
+                <div class="input-container">
+                  <button class="attachment-btn" id="attachment-btn">
+                    <i class="fas fa-paperclip"></i>
+                  </button>
+                  <input
+                    type="text"
+                    id="message-input"
+                    class="form-control"
+                    placeholder="Type your message..."
+                    disabled
+                  />
+                  <button class="emoji-btn" id="emoji-btn">
+                    <i class="fas fa-smile"></i>
+                  </button>
+                  <button
+                    class="btn btn-primary send-btn"
+                    id="send-message-btn"
+                    disabled
+                  >
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+              <!-- </div> -->
+              <div class="chat-placeholder" id="chat-placeholder">
+                <div class="placeholder-content">
+                  <i class="fas fa-comments"></i>
+                  <h3>Welcome to Broozgar Chat</h3>
+                  <p>Connect with recruiters and fellow professionals</p>
+                  <button class="btn btn-primary" id="start-chat-btn">
+                    <i class="fas fa-plus"></i>
+                    Start New Conversation
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- About Page -->
+      <section id="about-page" class="page">
+        <div class="container">
+          <div class="about-hero">
+            <div class="about-content">
+              <h1>About Broozgar</h1>
+              <p class="lead">
+                Empowering India's workforce with cutting-edge technology and
+                meaningful connections
+              </p>
+            </div>
+          </div>
+
+          <div class="about-story">
+            <div class="story-content">
+              <h2>Our Story</h2>
+              <p>
+                Founded in 2024, Broozgar emerged from a simple yet powerful
+                vision: to bridge the gap between talented professionals and
+                forward-thinking companies in India. We recognized that
+                traditional job searching methods were outdated and inefficient,
+                leaving both job seekers and employers frustrated.
+              </p>
+
+              <p>
+                Our team of passionate technologists, career experts, and
+                industry veterans came together to create a platform that
+                leverages artificial intelligence, data analytics, and human
+                insight to revolutionize how careers are built in India.
+              </p>
+
+              <p>
+                Today, Broozgar stands as India's premier job portal, trusted by
+                thousands of professionals and hundreds of companies across the
+                country. We're not just a job board – we're a career ecosystem
+                that nurtures growth, facilitates connections, and drives
+                success.
+              </p>
+            </div>
+          </div>
+
+          <div class="about-mission">
+            <div class="mission-grid">
+              <div class="mission-card">
+                <div class="mission-icon">
+                  <i class="fas fa-bullseye"></i>
+                </div>
+                <h3>Our Mission</h3>
+                <p>
+                  To democratize access to career opportunities and empower
+                  every Pakistani professional to achieve their full potential
+                  through technology-driven solutions and meaningful
+                  connections.
+                </p>
+              </div>
+              <div class="mission-card">
+                <div class="mission-icon">
+                  <i class="fas fa-eye"></i>
+                </div>
+                <h3>Our Vision</h3>
+                <p>
+                  To become the leading career platform in South Asia, setting
+                  new standards for how talent and opportunity connect in the
+                  digital age.
+                </p>
+              </div>
+              <div class="mission-card">
+                <div class="mission-icon">
+                  <i class="fas fa-heart"></i>
+                </div>
+                <h3>Our Values</h3>
+                <p>
+                  Innovation, integrity, inclusivity, and impact. We believe in
+                  creating value for all stakeholders while maintaining the
+                  highest ethical standards.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-features">
+            <h2>What Makes Us Different</h2>
+            <div class="features-comparison">
+              <div class="feature-item">
+                <div class="feature-header">
+                  <h3>For Job Seekers</h3>
+                  <i class="fas fa-user-graduate"></i>
+                </div>
+                <ul>
+                  <li>
+                    <i class="fas fa-check"></i> AI-powered job matching based
+                    on skills and preferences
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Real-time resume analysis and
+                    improvement suggestions
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Direct communication with
+                    hiring managers
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Comprehensive application
+                    tracking and analytics
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Free career development
+                    resources and courses
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Salary insights and market
+                    trends
+                  </li>
+                </ul>
+              </div>
+              <div class="feature-item">
+                <div class="feature-header">
+                  <h3>For Recruiters</h3>
+                  <i class="fas fa-users"></i>
+                </div>
+                <ul>
+                  <li>
+                    <i class="fas fa-check"></i> Smart candidate filtering and
+                    ranking algorithms
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Automated resume screening and
+                    scoring
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Integrated interview scheduling
+                    and management
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Advanced analytics and hiring
+                    insights dashboard
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Employer branding and company
+                    profile tools
+                  </li>
+                  <li>
+                    <i class="fas fa-check"></i> Dedicated account management
+                    support
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-team">
+            <h2>Leadership Team</h2>
+            <div class="team-grid">
+              <div class="team-member">
+                <div class="member-avatar">
+                  <img
+                    src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300"
+                    alt="CEO"
+                  />
+                </div>
+                <h4>ZXC</h4>
+                <span>Chief Executive Officer</span>
+                <p>
+                  Former tech executive with 15+ years in HR technology and
+                  talent acquisition.
+                </p>
+              </div>
+              <div class="team-member">
+                <div class="member-avatar">
+                  <img
+                    src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300"
+                    alt="CTO"
+                  />
+                </div>
+                <h4>XYZ</h4>
+                <span>Chief Technology Officer</span>
+                <p>
+                  AI and machine learning expert with a passion for solving
+                  complex problems through technology.
+                </p>
+              </div>
+              <div class="team-member">
+                <div class="member-avatar">
+                  <img
+                    src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300"
+                    alt="CPO"
+                  />
+                </div>
+                <h4>Aman Kumar</h4>
+                <span>Chief Product Officer</span>
+                <p>
+                  Product strategist focused on creating user-centric
+                  experiences that drive meaningful outcomes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact Page -->
+      <section id="contact-page" class="page">
+        <div class="container">
+          <div class="contact-hero">
+            <h1>Get in Touch</h1>
+            <p>
+              We'd love to hear from you. Send us a message and we'll respond as
+              soon as possible.
+            </p>
+          </div>
+
+          <div class="contact-content">
+            <div class="contact-form-section">
+              <div class="contact-form">
+                <h3>Send us a Message</h3>
+                <form id="contact-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Full Name</label>
+                      <input type="text" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                      <label>Email Address</label>
+                      <input type="email" class="form-control" required />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Subject</label>
+                    <select class="form-control" required>
+                      <option value="">Select a topic</option>
+                      <option value="general">General Inquiry</option>
+                      <option value="support">Technical Support</option>
+                      <option value="partnership">Partnership</option>
+                      <option value="feedback">Feedback</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Message</label>
+                    <textarea class="form-control" rows="6" required></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-large">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Message
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="contact-info-section">
+              <div class="contact-info">
+                <h3>Contact Information</h3>
+                <div class="contact-item">
+                  <div class="contact-icon">
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h4>Email</h4>
+                    <p>support@broozgar.com</p>
+                    <p>careers@broozgar.com</p>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-icon">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h4>Phone</h4>
+                    <p>+92 21 1234 5678</p>
+                    <p>+92 300 1234567</p>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h4>Address</h4>
+                    <p>
+                      Block A<br />
+                      Shapoorji<br />
+                      Kolkata, India
+                    </p>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h4>Business Hours</h4>
+                    <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
+                    <p>Saturday: 10:00 AM - 4:00 PM</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="social-links">
+                <h4>Follow Us</h4>
+                <div class="social-icons">
+                  <a href="#" class="social-link">
+                    <i class="fab fa-facebook-f"></i>
+                  </a>
+                  <a href="#" class="social-link">
+                    <i class="fab fa-twitter"></i>
+                  </a>
+                  <a href="#" class="social-link">
+                    <i class="fab fa-linkedin-in"></i>
+                  </a>
+                  <a href="#" class="social-link">
+                    <i class="fab fa-instagram"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <!-- Modals -->
     <!-- Login Modal -->
     <div id="login-modal" class="modal">
       <div class="modal-content">
         <span class="close" data-modal="login-modal">&times;</span>
-        <h2>Login</h2>
-        <div class="auth-tabs">
-          <button class="auth-tab active" data-auth="user">Job Seeker</button>
-          <button class="auth-tab" data-auth="recruiter">Recruiter</button>
+        <div class="modal-header">
+          <h2>Welcome Back to Broozgar</h2>
+          <p>Sign in to continue your career journey</p>
         </div>
-        <form id="login-form" class="form">
+
+        <form id="login-form">
           <div class="form-group">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" name="email" required />
+            <label><i class="fas fa-envelope"></i> Email Address</label>
+            <input
+              type="email"
+              id="login-email"
+              class="form-control"
+              placeholder="Enter your email"
+              required
+            />
           </div>
           <button type="submit" class="btn btn-primary btn-full">
+            <i class="fas fa-paper-plane"></i>
             Send OTP
           </button>
         </form>
 
-        <form id="otp-form" class="form" style="display: none">
+        <form id="otp-form" style="display: none">
           <div class="form-group">
-            <label for="otp-code">Enter OTP</label>
-            <input type="number" id="otp-code" name="otp" required />
+            <label><i class="fas fa-key"></i> Enter OTP</label>
+            <input
+              type="text"
+              id="otp-code"
+              class="form-control"
+              maxlength="6"
+              placeholder="Enter 6-digit code"
+              required
+            />
+            <small>Check your email for the verification code</small>
           </div>
           <button type="submit" class="btn btn-primary btn-full">
+            <i class="fas fa-check"></i>
             Verify OTP
           </button>
         </form>
@@ -503,87 +1357,152 @@
 
     <!-- Signup Modal -->
     <div id="signup-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content modal-large">
         <span class="close" data-modal="signup-modal">&times;</span>
-        <h2>Sign Up</h2>
-        <div class="auth-tabs">
-          <button class="auth-tab active" data-auth="user">Job Seeker</button>
-          <button class="auth-tab" data-auth="recruiter">Recruiter</button>
+        <div class="modal-header">
+          <h2>Join Broozgar Today</h2>
+          <p>Start your journey to finding the perfect career opportunity</p>
         </div>
 
-        <!-- User Signup Form -->
-        <form id="user-signup-form" class="form auth-form active">
-          <div class="form-group">
-            <label for="user-name">Full Name</label>
-            <input type="text" id="user-name" name="name" required />
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth="user">
+            <i class="fas fa-user"></i>
+            Job Seeker
+          </button>
+          <button class="auth-tab" data-auth="recruiter">
+            <i class="fas fa-building"></i>
+            Recruiter
+          </button>
+        </div>
+
+        <form id="user-signup-form" class="auth-form active">
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-user"></i> Full Name</label>
+              <input
+                type="text"
+                id="user-name"
+                class="form-control"
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-envelope"></i> Email Address</label>
+              <input
+                type="email"
+                id="user-email"
+                class="form-control"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
           </div>
           <div class="form-group">
-            <label for="user-email">Email</label>
-            <input type="email" id="user-email" name="email" required />
+            <label><i class="fas fa-phone"></i> Phone Number</label>
+            <input
+              type="tel"
+              id="user-phone"
+              class="form-control"
+              placeholder="Enter your phone number"
+              required
+            />
           </div>
           <div class="form-group">
-            <label for="user-phone">Phone</label>
-            <input type="tel" id="user-phone" name="phone" required />
-          </div>
-          <div class="form-group">
-            <label for="user-skills">Skills</label>
+            <label><i class="fas fa-code"></i> Skills</label>
             <input
               type="text"
               id="user-skills"
-              name="skills"
-              placeholder="e.g., JavaScript, Python, React"
+              class="form-control"
+              placeholder="e.g., JavaScript, Python, React, Marketing"
               required
             />
           </div>
           <div class="form-group">
-            <label for="user-experience">Experience</label>
-            <input
-              type="text"
+            <label><i class="fas fa-briefcase"></i> Experience</label>
+            <textarea
               id="user-experience"
-              name="experience"
-              placeholder="e.g., 2 years"
+              class="form-control"
+              rows="3"
+              placeholder="Describe your work experience..."
               required
-            />
+            ></textarea>
           </div>
           <div class="form-group">
-            <label for="user-education">Education</label>
-            <input type="text" id="user-education" name="education" required />
+            <label><i class="fas fa-graduation-cap"></i> Education</label>
+            <textarea
+              id="user-education"
+              class="form-control"
+              rows="3"
+              placeholder="Describe your educational background..."
+              required
+            ></textarea>
           </div>
           <div class="form-group">
-            <label for="user-resume">Resume (PDF)</label>
+            <label><i class="fas fa-file-upload"></i> Resume</label>
             <input
               type="file"
               id="user-resume"
-              name="resume"
-              accept=".pdf"
+              class="form-control"
+              accept=".pdf,.doc,.docx"
               required
             />
+            <small>Upload your resume in PDF or Word format (Max 5MB)</small>
           </div>
           <button type="submit" class="btn btn-primary btn-full">
-            Sign Up
+            <i class="fas fa-user-plus"></i>
+            Create Account
           </button>
         </form>
 
-        <!-- Recruiter Signup Form -->
-        <form id="recruiter-signup-form" class="form auth-form">
-          <div class="form-group">
-            <label for="recruiter-name">Full Name</label>
-            <input type="text" id="recruiter-name" name="name" required />
+        <form id="recruiter-signup-form" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-user"></i> Full Name</label>
+              <input
+                type="text"
+                id="recruiter-name"
+                class="form-control"
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-envelope"></i> Email Address</label>
+              <input
+                type="email"
+                id="recruiter-email"
+                class="form-control"
+                placeholder="Enter your work email"
+                required
+              />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="recruiter-email">Email</label>
-            <input type="email" id="recruiter-email" name="email" required />
-          </div>
-          <div class="form-group">
-            <label for="recruiter-company">Company</label>
-            <input type="text" id="recruiter-company" name="company" required />
-          </div>
-          <div class="form-group">
-            <label for="recruiter-phone">Phone</label>
-            <input type="tel" id="recruiter-phone" name="phone" required />
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-building"></i> Company</label>
+              <input
+                type="text"
+                id="recruiter-company"
+                class="form-control"
+                placeholder="Enter your company name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-phone"></i> Phone Number</label>
+              <input
+                type="tel"
+                id="recruiter-phone"
+                class="form-control"
+                placeholder="Enter your phone number"
+                required
+              />
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-full">
-            Sign Up
+            <i class="fas fa-building"></i>
+            Create Recruiter Account
           </button>
         </form>
       </div>
@@ -599,31 +1518,35 @@
       </div>
     </div>
 
-    <!-- Interview Schedule Modal -->
+    <!-- Interview Modal -->
     <div id="interview-modal" class="modal">
       <div class="modal-content">
         <span class="close" data-modal="interview-modal">&times;</span>
-        <h2>Schedule Interview</h2>
-        <form id="interview-form" class="form">
+        <div class="modal-header">
+          <h2><i class="fas fa-calendar-check"></i> Schedule Interview</h2>
+          <p>Set up an interview with the candidate</p>
+        </div>
+
+        <form id="interview-form">
           <div class="form-group">
-            <label for="interview-date">Interview Date & Time</label>
+            <label><i class="fas fa-calendar"></i> Interview Date & Time</label>
             <input
               type="datetime-local"
               id="interview-date"
-              name="date"
+              class="form-control"
               required
             />
           </div>
           <div class="form-group">
-            <label for="interview-mode">Interview Mode</label>
-            <select id="interview-mode" name="mode" required>
-              <option value="">Select Mode</option>
-              <option value="Video Call">Video Call</option>
-              <option value="Phone Call">Phone Call</option>
-              <option value="In-Person">In-Person</option>
+            <label><i class="fas fa-video"></i> Interview Mode</label>
+            <select id="interview-mode" class="form-control" required>
+              <option value="Online">Online (Video Call)</option>
+              <option value="In-person">In-person</option>
+              <option value="Phone">Phone Call</option>
             </select>
           </div>
           <button type="submit" class="btn btn-primary btn-full">
+            <i class="fas fa-calendar-check"></i>
             Schedule Interview
           </button>
         </form>
@@ -631,13 +1554,17 @@
     </div>
 
     <!-- Loading Spinner -->
-    <div id="loading" class="loading" style="display: none">
-      <div class="spinner"></div>
+    <div id="loading" class="loading-overlay">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
     </div>
 
-    <!-- Toast Notifications -->
+    <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Scripts -->
     <script src="script.js"></script>
   </body>
 </html>
