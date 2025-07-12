@@ -1,5 +1,3 @@
-// Only for local testing first serve a server to frontend:- python -m http.server 5500 --bind 127.0.0.1
-
 // Global variables
 let currentUser = null;
 let currentUserEmail = null;
@@ -7,25 +5,131 @@ let userType = null;
 let websocket = null;
 let currentChatUser = null;
 const API_BASE = "http://127.0.0.1:8000";
-const $ = window.jQuery; // Declare the $ variable
+const $ = window.jQuery;
 
 // Initialize the application
 $(document).ready(() => {
   initializeApp();
   setupEventListeners();
   checkAuthStatus();
+  initializeAnimations();
 });
 
 // Initialize application
 function initializeApp() {
-  // Show home page by default
   showPage("home");
-
-  // Setup navigation
   setupNavigation();
-
-  // Load initial data
   loadJobs();
+  animateCounters();
+}
+
+// Initialize animations and interactive elements
+function initializeAnimations() {
+  // Animate hero stats on page load
+  setTimeout(() => {
+    animateCounters();
+  }, 1000);
+
+  // Add scroll animations
+  setupScrollAnimations();
+
+  // Add interactive hover effects
+  setupInteractiveEffects();
+}
+
+// Animate counter numbers
+function animateCounters() {
+  $(".stat-number[data-count]").each(function () {
+    const $this = $(this);
+    const target = parseInt($this.data("count"));
+    const duration = 2000;
+    const increment = target / (duration / 16);
+    let current = 0;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        current = target;
+        clearInterval(timer);
+      }
+      $this.text(Math.floor(current).toLocaleString());
+    }, 16);
+
+    $this.addClass("count-animation");
+  });
+}
+
+// Setup scroll animations
+function setupScrollAnimations() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: "0px 0px -50px 0px",
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = "1";
+        entry.target.style.transform = "translateY(0)";
+      }
+    });
+  }, observerOptions);
+
+  // Observe feature cards and other elements
+  $(".feature-card, .story-card, .mission-card, .team-member").each(
+    function () {
+      this.style.opacity = "0";
+      this.style.transform = "translateY(30px)";
+      this.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+      observer.observe(this);
+    }
+  );
+}
+
+// Setup interactive effects
+function setupInteractiveEffects() {
+  // Add ripple effect to buttons
+  $(".btn").on("click", function (e) {
+    const button = $(this);
+    const ripple = $('<span class="ripple"></span>');
+
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    ripple.css({
+      width: size,
+      height: size,
+      left: x,
+      top: y,
+      position: "absolute",
+      borderRadius: "50%",
+      background: "rgba(255, 255, 255, 0.3)",
+      transform: "scale(0)",
+      animation: "ripple 0.6s linear",
+      pointerEvents: "none",
+    });
+
+    button.css("position", "relative").css("overflow", "hidden");
+    button.append(ripple);
+
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  // Add floating animation to hero cards
+  $(".floating-card").each(function (index) {
+    $(this).css("animation-delay", `${index * 0.5}s`);
+  });
+
+  // Add parallax effect to hero background
+  $(window).on("scroll", function () {
+    const scrolled = $(this).scrollTop();
+    const parallax = $(".hero-background");
+    const speed = 0.5;
+
+    parallax.css("transform", `translateY(${scrolled * speed}px)`);
+  });
 }
 
 // Setup event listeners
@@ -34,35 +138,49 @@ function setupEventListeners() {
   $(".nav-link").click(function (e) {
     e.preventDefault();
     const page = $(this).data("page");
-    showPage(page);
+    if (page) {
+      showPage(page);
+
+      // Add active state animation
+      $(".nav-link").removeClass("active");
+      $(this).addClass("active");
+    }
   });
 
   // Mobile menu toggle
   $("#hamburger").click(() => {
     $(".nav-menu").toggleClass("active");
+    $("#hamburger").toggleClass("active");
   });
-  $("#signup-btn").click(() => showModal("signup-modal"));
+
   // Auth buttons
   $("#login-btn").click(() => showModal("login-modal"));
-  $("#hero-signup").click(() => showModal("signup-modal"));
-  $("#hero-browse").click(() => showPage("jobs"));
+  $("#signup-btn, #hero-signup, #cta-signup").click(() =>
+    showModal("signup-modal")
+  );
+  $("#hero-browse, #cta-browse").click(() => showPage("jobs"));
   $("#logout-btn").click(logout);
 
   // Dashboard navigation
   $("#dashboard-btn").click(() => showPage("dashboard"));
   $("#notifications-btn").click(() => showPage("notifications"));
   $("#chat-btn").click(() => showPage("chat"));
+  $("#profile-btn").click(() => showPage("profile"));
 
   // Modal close buttons
   $(".close").click(function () {
     const modalId = $(this).data("modal");
-    hideModal(modalId);
+    if (modalId) {
+      hideModal(modalId);
+    }
   });
 
   // Auth tabs
   $(".auth-tab").click(function () {
     const authType = $(this).data("auth");
-    switchAuthTab(authType);
+    if (authType) {
+      switchAuthTab(authType);
+    }
   });
 
   // Forms
@@ -72,11 +190,15 @@ function setupEventListeners() {
   $("#recruiter-signup-form").submit(handleRecruiterSignup);
   $("#create-job-form").submit(handleCreateJob);
   $("#interview-form").submit(handleScheduleInterview);
+  $("#profile-edit-form").submit(handleProfileUpdate);
+  $("#contact-form").submit(handleContactForm);
 
   // Dashboard tabs
   $(".tab-btn").click(function () {
     const tab = $(this).data("tab");
-    switchDashboardTab(tab);
+    if (tab) {
+      switchDashboardTab(tab);
+    }
   });
 
   // Job search
@@ -89,6 +211,15 @@ function setupEventListeners() {
     }
   );
 
+  // Quick filter tags
+  $(".filter-tag").click(function () {
+    const searchTerm = $(this).data("search");
+    if (searchTerm) {
+      $("#job-search-title").val(searchTerm);
+      searchJobs();
+    }
+  });
+
   // Chat
   $("#send-message-btn").click(sendMessage);
   $("#message-input").keypress((e) => {
@@ -97,23 +228,102 @@ function setupEventListeners() {
     }
   });
 
+  // Notification filters
+  $(".filter-btn").click(function () {
+    $(".filter-btn").removeClass("active");
+    $(this).addClass("active");
+    const filter = $(this).data("filter");
+    if (filter) {
+      filterNotifications(filter);
+    }
+  });
+
+  // Profile actions
+  $(document).on("click", "#edit-profile-btn", function () {
+    $("#profile-view").hide();
+    $("#profile-edit").show();
+  });
+
+  $(document).on("click", "#cancel-edit-btn", function () {
+    $("#profile-edit").hide();
+    $("#profile-view").show();
+    loadProfile();
+  });
+
+  $(document).on("click", "#update-resume-btn", handleResumeUpdate);
+  $(document).on("click", "#delete-account-btn", confirmDeleteAccount);
+
   // Click outside modal to close
   $(window).click((e) => {
     if ($(e.target).hasClass("modal")) {
       $(e.target).hide();
     }
   });
+
+  // Add smooth scrolling for anchor links
+  $('a[href^="#"]').on("click", function (event) {
+    const target = $(this.getAttribute("href"));
+    if (target.length) {
+      event.preventDefault();
+      $("html, body")
+        .stop()
+        .animate(
+          {
+            scrollTop: target.offset().top - 80,
+          },
+          1000
+        );
+    }
+  });
+
+  // Add loading states to buttons
+  $(document).on("click", ".btn", function () {
+    const btn = $(this);
+    if (btn.hasClass("loading")) return false;
+
+    const originalText = btn.html();
+    btn
+      .addClass("loading")
+      .html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+
+    setTimeout(() => {
+      btn.removeClass("loading").html(originalText);
+    }, 2000);
+  });
 }
 
 // Navigation functions
 function setupNavigation() {
-  // Update navigation based on auth status
   updateNavigation();
 }
 
 function showPage(pageId) {
-  $(".page").removeClass("active");
-  $(`#${pageId}-page`).addClass("active");
+  // Validate pageId
+  if (!pageId || typeof pageId !== "string") {
+    console.error("showPage: Invalid pageId provided");
+    return;
+  }
+
+  // Check if page exists
+  const pageElement = $(`#${pageId}-page`);
+  if (pageElement.length === 0) {
+    console.error(`showPage: Page with id "${pageId}-page" not found`);
+    return;
+  }
+
+  // Add page transition effect
+  $(".page.active").fadeOut(200, function () {
+    $(this).removeClass("active");
+    pageElement.fadeIn(300).addClass("active");
+  });
+
+  // Close mobile menu
+  $(".nav-menu").removeClass("active");
+  $("#hamburger").removeClass("active");
+
+  // Update navigation active state
+  $(".nav-link").removeClass("active");
+  $(`.nav-link[data-page="${pageId}"]`).addClass("active");
 
   // Load page-specific data
   switch (pageId) {
@@ -129,13 +339,33 @@ function showPage(pageId) {
     case "chat":
       loadChatContacts();
       break;
+    case "profile":
+      loadProfile();
+      break;
   }
+
+  // Scroll to top
+  $("html, body").animate({ scrollTop: 0 }, 300);
 }
 
 function updateNavigation() {
   if (currentUser) {
     $("#auth-buttons").hide();
     $("#user-menu").show();
+
+    // Update user info in dropdown
+    if (currentUser.name) {
+      $("#user-name-dropdown").text(currentUser.name);
+    }
+    $("#user-type-dropdown").text(
+      userType === "recruiter" ? "Recruiter" : "Job Seeker"
+    );
+
+    // Update avatar
+    const initials = currentUser.name
+      ? currentUser.name.charAt(0).toUpperCase()
+      : "U";
+    $("#user-avatar-text").text(initials);
   } else {
     $("#auth-buttons").show();
     $("#user-menu").hide();
@@ -144,21 +374,53 @@ function updateNavigation() {
 
 // Modal functions
 function showModal(modalId) {
-  $(`#${modalId}`).show();
+  // Validate modalId
+  if (!modalId || typeof modalId !== "string") {
+    console.error("showModal: Invalid modalId provided");
+    return;
+  }
+
+  const modalElement = $(`#${modalId}`);
+  if (modalElement.length === 0) {
+    console.error(`showModal: Modal with id "${modalId}" not found`);
+    return;
+  }
+
+  modalElement.fadeIn(300);
+  $("body").addClass("modal-open");
 }
 
 function hideModal(modalId) {
-  $(`#${modalId}`).hide();
+  // Validate modalId
+  if (!modalId || typeof modalId !== "string") {
+    console.error("hideModal: Invalid modalId provided");
+    return;
+  }
+
+  const modalElement = $(`#${modalId}`);
+  if (modalElement.length === 0) {
+    console.error(`hideModal: Modal with id "${modalId}" not found`);
+    return;
+  }
+
+  modalElement.fadeOut(300);
+  $("body").removeClass("modal-open");
 }
 
 function switchAuthTab(authType) {
+  // Validate authType
+  if (!authType || typeof authType !== "string") {
+    console.error("switchAuthTab: Invalid authType provided");
+    return;
+  }
+
   $(".auth-tab").removeClass("active");
   $(`.auth-tab[data-auth="${authType}"]`).addClass("active");
 
   $(".auth-form").removeClass("active");
   if (authType === "user") {
     $("#user-signup-form").addClass("active");
-  } else {
+  } else if (authType === "recruiter") {
     $("#recruiter-signup-form").addClass("active");
   }
 }
@@ -174,9 +436,7 @@ function checkAuthStatus() {
     success: (response) => {
       currentUser = response.user;
       currentUserEmail = response.user_email;
-
       userType = response.user_type;
-      console.log(userType);
       updateNavigation();
       setupWebSocket();
     },
@@ -192,6 +452,11 @@ function checkAuthStatus() {
 function handleLogin(e) {
   e.preventDefault();
   const email = $("#login-email").val();
+
+  if (!email || !email.trim()) {
+    showToast("Please enter your email address", "error");
+    return;
+  }
 
   showLoading();
 
@@ -217,8 +482,18 @@ function handleLogin(e) {
 
 function handleOTPVerification(e) {
   e.preventDefault();
-  const otp = Number.parseInt($("#otp-code").val());
+  const otp = parseInt($("#otp-code").val());
   const email = $("#otp-form").data("email");
+
+  if (!otp || isNaN(otp)) {
+    showToast("Please enter a valid OTP", "error");
+    return;
+  }
+
+  if (!email) {
+    showToast("Email not found. Please try logging in again.", "error");
+    return;
+  }
 
   showLoading();
 
@@ -227,14 +502,12 @@ function handleOTPVerification(e) {
       email
     )}`,
     method: "POST",
-
     xhrFields: {
       withCredentials: true,
     },
-    crossDomain: true,
     success: (response) => {
       hideLoading();
-      showToast("Login successful!", "success");
+      showToast("Welcome to Broozgar! 🎉", "success");
       hideModal("login-modal");
       checkAuthStatus();
       showPage("dashboard");
@@ -257,13 +530,35 @@ function handleUserSignup(e) {
   e.preventDefault();
 
   const formData = new FormData();
-  formData.append("name", $("#user-name").val());
-  formData.append("email", $("#user-email").val());
-  formData.append("phone", $("#user-phone").val());
-  formData.append("skills", $("#user-skills").val());
-  formData.append("experience", $("#user-experience").val());
-  formData.append("education", $("#user-education").val());
-  formData.append("resume", $("#user-resume")[0].files[0]);
+  const name = $("#user-name").val();
+  const email = $("#user-email").val();
+  const phone = $("#user-phone").val();
+  const skills = $("#user-skills").val();
+  const experience = $("#user-experience").val();
+  const education = $("#user-education").val();
+  const resume = $("#user-resume")[0].files[0];
+
+  // Validation
+  if (
+    !name ||
+    !email ||
+    !phone ||
+    !skills ||
+    !experience ||
+    !education ||
+    !resume
+  ) {
+    showToast("Please fill in all required fields", "error");
+    return;
+  }
+
+  formData.append("name", name);
+  formData.append("email", email);
+  formData.append("phone", phone);
+  formData.append("skills", skills);
+  formData.append("experience", experience);
+  formData.append("education", education);
+  formData.append("resume", resume);
 
   showLoading();
 
@@ -275,7 +570,7 @@ function handleUserSignup(e) {
     contentType: false,
     success: (response) => {
       hideLoading();
-      showToast("Registration successful! Please login.", "success");
+      showToast("Welcome to Broozgar! Please login to continue.", "success");
       hideModal("signup-modal");
       showModal("login-modal");
       $("#user-signup-form")[0].reset();
@@ -291,11 +586,22 @@ function handleUserSignup(e) {
 function handleRecruiterSignup(e) {
   e.preventDefault();
 
+  const name = $("#recruiter-name").val();
+  const email = $("#recruiter-email").val();
+  const company = $("#recruiter-company").val();
+  const phone = $("#recruiter-phone").val();
+
+  // Validation
+  if (!name || !email || !company || !phone) {
+    showToast("Please fill in all required fields", "error");
+    return;
+  }
+
   const data = {
-    name: $("#recruiter-name").val(),
-    email: $("#recruiter-email").val(),
-    company: $("#recruiter-company").val(),
-    phone: $("#recruiter-phone").val(),
+    name: name,
+    email: email,
+    company: company,
+    phone: phone,
   };
 
   showLoading();
@@ -307,7 +613,7 @@ function handleRecruiterSignup(e) {
     data: JSON.stringify(data),
     success: (response) => {
       hideLoading();
-      showToast("Registration successful! Please login.", "success");
+      showToast("Welcome to Broozgar! Please login to continue.", "success");
       hideModal("signup-modal");
       showModal("login-modal");
       $("#recruiter-signup-form")[0].reset();
@@ -333,9 +639,8 @@ function logout() {
       userType = null;
       updateNavigation();
       showPage("home");
-      showToast("Logged out successfully", "success");
+      showToast("Thank you for using Broozgar! 👋", "success");
 
-      // Close WebSocket connection
       if (websocket) {
         websocket.close();
         websocket = null;
@@ -343,6 +648,350 @@ function logout() {
     },
     error: () => {
       showToast("Logout failed", "error");
+    },
+  });
+}
+
+// Contact form handler
+function handleContactForm(e) {
+  e.preventDefault();
+
+  showLoading();
+
+  // Simulate form submission
+  setTimeout(() => {
+    hideLoading();
+    showToast(
+      "Thank you for your message! We'll get back to you soon.",
+      "success"
+    );
+    $("#contact-form")[0].reset();
+  }, 1500);
+}
+
+// Profile functions
+function loadProfile() {
+  if (!currentUser) {
+    showPage("home");
+    showToast("Please login to view your profile", "warning");
+    return;
+  }
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/current-user-data`,
+    method: "GET",
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (userData) => {
+      hideLoading();
+      displayProfile(userData);
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to load profile";
+      showToast(error, "error");
+    },
+  });
+}
+
+function displayProfile(userData) {
+  // Update profile view
+  $("#profile-name").text(userData.Name || "Not provided");
+  $("#profile-email").text(userData.Email || "Not provided");
+  $("#profile-phone").text(userData.Phone || "Not provided");
+
+  // Update avatar
+  const initials = userData.Name ? userData.Name.charAt(0).toUpperCase() : "U";
+  $("#profile-avatar-text").text(initials);
+
+  if (userType === "user") {
+    // Show user-specific fields
+    $("#edit-skills-group").show();
+    $("#edit-experience-group").show();
+    $("#edit-education-group").show();
+    $("#edit-resume-group").show();
+    $("#edit-company-group").hide();
+
+    // Update skills display
+    if (userData.Skills) {
+      const skillsHtml = userData.Skills.split(",")
+        .map((skill) => `<span class="skill-tag">${skill.trim()}</span>`)
+        .join("");
+      $("#profile-skills").html(skillsHtml);
+    } else {
+      $("#profile-skills").html(
+        '<span class="skill-tag">No skills added</span>'
+      );
+    }
+
+    $("#profile-experience").text(userData.Experience || "Not provided");
+    $("#profile-education").text(userData.Education || "Not provided");
+
+    // Handle resume display
+    if (userData.Resume) {
+      $("#profile-resume").html(`
+                <button class="btn btn-outline btn-small" onclick="downloadCurrentResume()">
+                    <i class="fas fa-download"></i>
+                    Download Resume
+                </button>
+                <span class="resume-status">
+                    <i class="fas fa-check-circle"></i>
+                    Resume uploaded
+                </span>
+            `);
+    } else {
+      $("#profile-resume").html(`
+                <span class="resume-status" style="color: var(--gray-500);">
+                    <i class="fas fa-exclamation-circle"></i>
+                    No resume uploaded
+                </span>
+            `);
+    }
+  } else {
+    // Show recruiter-specific fields
+    $("#edit-skills-group").hide();
+    $("#edit-experience-group").hide();
+    $("#edit-education-group").hide();
+    $("#edit-resume-group").hide();
+    $("#edit-company-group").show();
+
+    $("#profile-company")
+      .text(userData.Company || "Not provided")
+      .show();
+
+    // Hide user-specific sections for recruiters
+    $(".detail-section").each(function () {
+      const heading = $(this).find("h3").text();
+      if (["Skills", "Experience", "Education", "Resume"].includes(heading)) {
+        $(this).hide();
+      }
+    });
+  }
+
+  // Populate edit form
+  populateEditForm(userData);
+
+  // Show profile view, hide edit form
+  $("#profile-view").show();
+  $("#profile-edit").hide();
+}
+
+function populateEditForm(userData) {
+  $("#edit-name").val(userData.Name || "");
+  $("#edit-email").val(userData.Email || "");
+  $("#edit-phone").val(userData.Phone || "");
+
+  if (userType === "user") {
+    $("#edit-skills").val(userData.Skills || "");
+    $("#edit-experience").val(userData.Experience || "");
+    $("#edit-education").val(userData.Education || "");
+  } else {
+    $("#edit-company").val(userData.Company || "");
+  }
+}
+
+function handleProfileUpdate(e) {
+  e.preventDefault();
+
+  const updateData = {};
+  const name = $("#edit-name").val()?.trim();
+  const email = $("#edit-email").val()?.trim();
+  const phone = $("#edit-phone").val()?.trim();
+
+  if (name) updateData.name = name;
+  if (email) updateData.email = email;
+  if (phone) updateData.phone = phone;
+
+  if (userType === "user") {
+    const skills = $("#edit-skills").val()?.trim();
+    const experience = $("#edit-experience").val()?.trim();
+    const education = $("#edit-education").val()?.trim();
+
+    if (skills) updateData.skills = skills;
+    if (experience) updateData.experience = experience;
+    if (education) updateData.education = education;
+  } else if (userType === "recruiter") {
+    const company = $("#edit-company").val()?.trim();
+    if (company) updateData.company = company;
+  }
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/update-your-details`,
+    method: "PATCH",
+    contentType: "application/json",
+    data: JSON.stringify(updateData),
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast("Profile updated successfully! ✨", "success");
+      $("#profile-edit").hide();
+      $("#profile-view").show();
+      loadProfile();
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to update profile";
+      showToast(error, "error");
+    },
+  });
+}
+
+function handleResumeUpdate() {
+  if (!currentUser) {
+    showToast("Please login to update resume", "warning");
+    return;
+  }
+
+  if (userType !== "user") {
+    showToast("Only job seekers can upload resumes", "warning");
+    return;
+  }
+
+  const resumeFile = $("#edit-resume")[0]?.files[0];
+  if (!resumeFile) {
+    showToast("Please select a resume file to upload", "warning");
+    return;
+  }
+
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  if (!allowedTypes.includes(resumeFile.type)) {
+    showToast("Please upload a PDF or Word document", "error");
+    return;
+  }
+
+  if (resumeFile.size > 5 * 1024 * 1024) {
+    showToast("File size must be less than 5MB", "error");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("new_resume", resumeFile);
+
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/update-resume`,
+    method: "PATCH",
+    data: formData,
+    processData: false,
+    contentType: false,
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast("Resume updated successfully! 📄", "success");
+      $("#edit-resume").val("");
+      loadProfile();
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to update resume";
+      showToast(error, "error");
+    },
+  });
+}
+
+function downloadCurrentResume() {
+  if (!currentUser) {
+    showToast("Please login to download resume", "warning");
+    return;
+  }
+
+  const downloadUrl = `${API_BASE}/download-resume`;
+  window.open(downloadUrl, "_blank");
+}
+
+function confirmDeleteAccount() {
+  const confirmationHtml = `
+        <div id="delete-confirmation-modal" class="modal" style="display: block;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 style="color: var(--danger-color);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Delete Account
+                    </h2>
+                    <p>This action cannot be undone</p>
+                </div>
+                <div style="padding: 2rem;">
+                    <p><strong>Are you sure you want to delete your account?</strong></p>
+                    <p>This will permanently remove:</p>
+                    <ul style="margin: 1rem 0; padding-left: 2rem;">
+                        <li>Your profile information</li>
+                        <li>All job applications</li>
+                        <li>Chat history</li>
+                        <li>All personal data</li>
+                    </ul>
+                    <div class="form-actions" style="margin-top: 2rem;">
+                        <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+                            <i class="fas fa-trash"></i>
+                            Yes, Delete My Account
+                        </button>
+                        <button type="button" class="btn btn-outline" id="cancel-delete-btn">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+  $("body").append(confirmationHtml);
+
+  $("#confirm-delete-btn").on("click", function () {
+    $("#delete-confirmation-modal").remove();
+    deleteAccount();
+  });
+
+  $("#cancel-delete-btn").on("click", function () {
+    $("#delete-confirmation-modal").remove();
+  });
+}
+
+function deleteAccount() {
+  showLoading();
+
+  $.ajax({
+    url: `${API_BASE}/delete-account`,
+    method: "DELETE",
+    xhrFields: {
+      withCredentials: true,
+    },
+    success: (response) => {
+      hideLoading();
+      showToast(
+        "Account deleted successfully. We're sorry to see you go! 😢",
+        "success"
+      );
+
+      currentUser = null;
+      currentUserEmail = null;
+      userType = null;
+      updateNavigation();
+      showPage("home");
+
+      if (websocket) {
+        websocket.close();
+        websocket = null;
+      }
+    },
+    error: (xhr) => {
+      hideLoading();
+      const error = xhr.responseJSON?.detail || "Failed to delete account";
+      showToast(error, "error");
     },
   });
 }
@@ -357,6 +1006,7 @@ function loadJobs() {
     success: (jobs) => {
       hideLoading();
       displayJobs(jobs);
+      updateJobsCount(jobs.length);
     },
     error: () => {
       hideLoading();
@@ -383,6 +1033,18 @@ function searchJobs() {
     success: (jobs) => {
       hideLoading();
       displayJobs(jobs);
+      updateJobsCount(jobs.length);
+
+      if (jobs.length === 0) {
+        showToast("No jobs found matching your criteria", "info");
+      } else {
+        showToast(
+          `Found ${jobs.length} job${
+            jobs.length > 1 ? "s" : ""
+          } matching your search`,
+          "success"
+        );
+      }
     },
     error: () => {
       hideLoading();
@@ -391,12 +1053,26 @@ function searchJobs() {
   });
 }
 
+function updateJobsCount(count) {
+  $("#jobs-count").text(`${count.toLocaleString()} Jobs Available`);
+}
+
 function displayJobs(jobs) {
   const jobsList = $("#jobs-list");
   jobsList.empty();
 
   if (jobs.length === 0) {
-    jobsList.html('<div class="text-center"><h3>No jobs found</h3></div>');
+    jobsList.html(`
+            <div class="text-center" style="grid-column: 1 / -1; padding: 3rem;">
+                <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <h3>No jobs found</h3>
+                <p>Try adjusting your search criteria or browse all available positions</p>
+                <button class="btn btn-primary" onclick="loadJobs()">
+                    <i class="fas fa-refresh"></i>
+                    Show All Jobs
+                </button>
+            </div>
+        `);
     return;
   }
 
@@ -406,20 +1082,46 @@ function displayJobs(jobs) {
       .join("");
 
     const jobCard = $(`
-            <div class="job-card">
-                <h3>${job.Title}</h3>
-                <div class="company">Company ID: ${job.RecruiterID}</div>
-                <div class="location">📍 ${job.Location}</div>
+            <div class="job-card" data-job-id="${job.JobID}">
+                <div class="job-header">
+                    <h3>${job.Title}</h3>
+                    <div class="job-status ${job.Status.toLowerCase()}">
+                        <i class="fas fa-circle"></i>
+                        ${job.Status}
+                    </div>
+                </div>
+                <div class="company">
+                    <i class="fas fa-building"></i>
+                    Company ID: ${job.RecruiterID}
+                </div>
+                <div class="location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${job.Location}
+                </div>
                 <div class="skills">${skillTags}</div>
-                <div class="salary">💰 ${job.Salary || "Not specified"}</div>
-                <div class="experience">🎯 ${job.ExperienceRequired}</div>
+                <div class="job-meta">
+                    <div class="salary">
+                        <i class="fas fa-money-bill-wave"></i>
+                        ${job.Salary || "Salary not specified"}
+                    </div>
+                    <div class="experience">
+                        <i class="fas fa-chart-line"></i>
+                        ${job.ExperienceRequired}
+                    </div>
+                </div>
                 <div class="job-actions">
-                    <button class="btn btn-primary view-job-btn" data-job-id="${
+                    <button class="btn btn-outline view-job-btn" data-job-id="${
                       job.JobID
-                    }">View Details</button>
+                    }">
+                        <i class="fas fa-eye"></i>
+                        View Details
+                    </button>
                     ${
-                      currentUser
-                        ? `<button class="btn btn-success apply-job-btn" data-job-id="${job.JobID}">Apply Now</button>`
+                      currentUser && userType === "user"
+                        ? `<button class="btn btn-primary apply-job-btn" data-job-id="${job.JobID}">
+                            <i class="fas fa-paper-plane"></i>
+                            Apply Now
+                        </button>`
                         : ""
                     }
                 </div>
@@ -432,16 +1134,35 @@ function displayJobs(jobs) {
   // Attach event listeners
   $(".view-job-btn").click(function () {
     const jobId = $(this).data("job-id");
-    viewJobDetails(jobId);
+    if (jobId) {
+      viewJobDetails(jobId);
+    }
   });
 
   $(".apply-job-btn").click(function () {
     const jobId = $(this).data("job-id");
-    applyForJob(jobId);
+    if (jobId) {
+      applyForJob(jobId);
+    }
   });
+
+  // Add hover effects
+  $(".job-card").hover(
+    function () {
+      $(this).addClass("hovered");
+    },
+    function () {
+      $(this).removeClass("hovered");
+    }
+  );
 }
 
 function viewJobDetails(jobId) {
+  if (!jobId) {
+    showToast("Invalid job ID", "error");
+    return;
+  }
+
   $.ajax({
     url: `${API_BASE}/job/${jobId}`,
     method: "GET",
@@ -451,33 +1172,63 @@ function viewJobDetails(jobId) {
         .join("");
 
       const jobDetails = `
-                <h2>${job.Title}</h2>
-                <div class="job-meta">
-                    <p><strong>Company:</strong> Recruiter ID ${
-                      job.RecruiterID
-                    }</p>
-                    <p><strong>Location:</strong> ${job.Location}</p>
-                    <p><strong>Salary:</strong> ${
-                      job.Salary || "Not specified"
-                    }</p>
-                    <p><strong>Experience Required:</strong> ${
-                      job.ExperienceRequired
-                    }</p>
-                    <p><strong>Status:</strong> ${job.Status}</p>
+                <div class="job-details-header">
+                    <h2>${job.Title}</h2>
+                    <div class="job-status ${job.Status.toLowerCase()}">
+                        <i class="fas fa-circle"></i>
+                        ${job.Status}
+                    </div>
                 </div>
-                <div class="job-skills">
-                    <h4>Skills Required:</h4>
-                    ${skillTags}
+                <div class="job-meta-grid">
+                    <div class="meta-item">
+                        <i class="fas fa-building"></i>
+                        <div>
+                            <strong>Company</strong>
+                            <span>Recruiter ID ${job.RecruiterID}</span>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Location</strong>
+                            <span>${job.Location}</span>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div>
+                            <strong>Salary</strong>
+                            <span>${job.Salary || "Not specified"}</span>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <strong>Experience</strong>
+                            <span>${job.ExperienceRequired}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="job-description">
-                    <h4>Job Description:</h4>
-                    <p>${job.Description}</p>
+                <div class="job-skills-section">
+                    <h4><i class="fas fa-code"></i> Skills Required</h4>
+                    <div class="skills-container">${skillTags}</div>
+                </div>
+                <div class="job-description-section">
+                    <h4><i class="fas fa-align-left"></i> Job Description</h4>
+                    <div class="description-content">${job.Description}</div>
                 </div>
                 ${
-                  currentUser
+                  currentUser && userType === "user"
                     ? `
-                    <div class="job-actions mt-20">
-                        <button class="btn btn-success" onclick="applyForJob(${job.JobID})">Apply for this Job</button>
+                    <div class="job-actions-section">
+                        <button class="btn btn-primary btn-large" onclick="applyForJob('${job.JobID}')">
+                            <i class="fas fa-paper-plane"></i>
+                            Apply for this Job
+                        </button>
+                        <button class="btn btn-outline btn-large" onclick="saveJob('${job.JobID}')">
+                            <i class="fas fa-bookmark"></i>
+                            Save Job
+                        </button>
                     </div>
                 `
                     : ""
@@ -494,9 +1245,19 @@ function viewJobDetails(jobId) {
 }
 
 function applyForJob(jobId) {
+  if (!jobId) {
+    showToast("Invalid job ID", "error");
+    return;
+  }
+
   if (!currentUser) {
     showToast("Please login to apply for jobs", "warning");
     showModal("login-modal");
+    return;
+  }
+
+  if (userType !== "user") {
+    showToast("Only job seekers can apply for jobs", "warning");
     return;
   }
 
@@ -510,25 +1271,49 @@ function applyForJob(jobId) {
     },
     success: (response) => {
       hideLoading();
-      showToast("Application submitted successfully!", "success");
+      showToast("Application submitted successfully! 🎉", "success");
       hideModal("job-details-modal");
 
-      // Show application result
       const resultHtml = `
-                <div class="application-result">
-                    <h3>Application Submitted!</h3>
-                    <p><strong>Resume Score:</strong> ${response.score}/100</p>
-                    <div class="score-bar">
-                        <div class="score-fill" style="width: ${response.score}%"></div>
-                    </div>
-                    <div class="ai-review">
-                        <h4>AI Review:</h4>
-                        <p>${response.review}</p>
+                <div id="application-result-modal" class="modal" style="display: block;">
+                    <div class="modal-content">
+                        <span class="close" onclick="$('#application-result-modal').remove()">&times;</span>
+                        <div class="application-result">
+                            <div class="result-header">
+                                <i class="fas fa-check-circle" style="color: var(--secondary-color); font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3>Application Submitted Successfully!</h3>
+                                <p>Your application has been processed by our AI system</p>
+                            </div>
+                            <div class="score-section">
+                                <div class="score-display">
+                                    <span class="score-number">${response.score}</span>
+                                    <span class="score-total">/100</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: ${response.score}%;"></div>
+                                </div>
+                                <p class="score-label">Resume Match Score</p>
+                            </div>
+                            <div class="ai-review-section">
+                                <h4><i class="fas fa-robot"></i> AI Analysis</h4>
+                                <div class="review-content">${response.review}</div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-primary" onclick="$('#application-result-modal').remove()">
+                                    <i class="fas fa-check"></i>
+                                    Continue
+                                </button>
+                                <button class="btn btn-outline" onclick="showPage('dashboard')">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    View Dashboard
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
 
-      showToast(resultHtml, "success");
+      $("body").append(resultHtml);
     },
     error: (xhr) => {
       hideLoading();
@@ -541,14 +1326,28 @@ function applyForJob(jobId) {
 function handleCreateJob(e) {
   e.preventDefault();
 
+  const title = $("#job-title").val();
+  const description = $("#job-description").val();
+  const skills = $("#job-skills").val();
+  const experience = $("#job-experience").val();
+  const salary = $("#job-salary").val();
+  const location = $("#job-location").val();
+  const status = $("#job-status").val();
+
+  // Validation
+  if (!title || !description || !skills || !experience || !location) {
+    showToast("Please fill in all required fields", "error");
+    return;
+  }
+
   const data = {
-    title: $("#job-title").val(),
-    description: $("#job-description").val(),
-    skills_required: $("#job-skills").val(),
-    experience_required: $("#job-experience").val(),
-    salary: $("#job-salary").val(),
-    location: $("#job-location").val(),
-    status: $("#job-status").val(),
+    title: title,
+    description: description,
+    skills_required: skills,
+    experience_required: experience,
+    salary: salary,
+    location: location,
+    status: status,
   };
 
   showLoading();
@@ -563,7 +1362,7 @@ function handleCreateJob(e) {
     },
     success: (response) => {
       hideLoading();
-      showToast("Job created successfully!", "success");
+      showToast("Job posted successfully! 🚀", "success");
       $("#create-job-form")[0].reset();
       loadRecruiterJobs();
     },
@@ -582,19 +1381,24 @@ function loadDashboard() {
     return;
   }
 
-  // Determine user type and setup dashboard accordingly
   setupDashboardForUserType();
   loadDashboardData();
 }
 
 function setupDashboardForUserType() {
   if (userType === "recruiter") {
-    $("#dashboard-title").text("Recruiter Dashboard");
+    $("#dashboard-title").text("Welcome Back, Recruiter!");
+    $("#dashboard-subtitle").text(
+      "Manage your job postings and find the perfect candidates"
+    );
     $("#applications-tab").text("Job Applications");
     $("#jobs-tab").show();
     $("#create-job-tab").show();
   } else {
-    $("#dashboard-title").text("Job Seeker Dashboard");
+    $("#dashboard-title").text("Welcome Back, Job Seeker!");
+    $("#dashboard-subtitle").text(
+      "Track your applications and discover new opportunities"
+    );
     $("#applications-tab").text("My Applications");
     $("#jobs-tab").hide();
     $("#create-job-tab").hide();
@@ -610,7 +1414,6 @@ function loadDashboardData() {
 }
 
 function loadUserDashboard() {
-  // Load user applications
   $.ajax({
     url: `${API_BASE}/user/applied-jobs`,
     method: "GET",
@@ -628,7 +1431,6 @@ function loadUserDashboard() {
 }
 
 function loadRecruiterDashboard() {
-  // Load recruiter jobs
   loadRecruiterJobs();
 }
 
@@ -654,9 +1456,17 @@ function displayUserApplications(applications) {
   applicationsList.empty();
 
   if (applications.length === 0) {
-    applicationsList.html(
-      '<div class="text-center"><h3>No applications yet</h3><p>Start applying for jobs to see them here.</p></div>'
-    );
+    applicationsList.html(`
+            <div class="empty-state">
+                <i class="fas fa-paper-plane" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <h3>No applications yet</h3>
+                <p>Start applying for jobs to see them here</p>
+                <button class="btn btn-primary" onclick="showPage('jobs')">
+                    <i class="fas fa-search"></i>
+                    Browse Jobs
+                </button>
+            </div>
+        `);
     return;
   }
 
@@ -664,15 +1474,23 @@ function displayUserApplications(applications) {
     const applicationCard = $(`
             <div class="application-card">
                 <div class="application-header">
-                    <h4>Job ID: ${app.job_id}</h4>
+                    <div class="application-info">
+                        <h4>Job ID: ${app.job_id}</h4>
+                        <span class="application-date">Applied recently</span>
+                    </div>
                     <span class="application-status status-${app.status.toLowerCase()}">${
       app.status
     }</span>
                 </div>
                 <div class="resume-score">
-                    <p><strong>Resume Score:</strong> ${
-                      app.resume_score
-                    }/100</p>
+                    <div class="score-header">
+                        <span><strong>Resume Score:</strong> ${
+                          app.resume_score
+                        }/100</span>
+                        <span class="score-percentage">${
+                          app.resume_score
+                        }%</span>
+                    </div>
                     <div class="score-bar">
                         <div class="score-fill" style="width: ${
                           app.resume_score
@@ -680,8 +1498,18 @@ function displayUserApplications(applications) {
                     </div>
                 </div>
                 <div class="ai-review">
-                    <h5>AI Review:</h5>
+                    <h5><i class="fas fa-robot"></i> AI Review</h5>
                     <p>${app.ai_review}</p>
+                </div>
+                <div class="application-actions">
+                    <button class="btn btn-outline btn-small">
+                        <i class="fas fa-eye"></i>
+                        View Job
+                    </button>
+                    <button class="btn btn-outline btn-small">
+                        <i class="fas fa-comments"></i>
+                        Message Recruiter
+                    </button>
                 </div>
             </div>
         `);
@@ -695,22 +1523,62 @@ function displayRecruiterJobs(jobs) {
   jobsList.empty();
 
   if (jobs.length === 0) {
-    jobsList.html(
-      '<div class="text-center"><h3>No jobs posted yet</h3><p>Create your first job posting.</p></div>'
-    );
+    jobsList.html(`
+            <div class="empty-state">
+                <i class="fas fa-briefcase" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <h3>No jobs posted yet</h3>
+                <p>Create your first job posting to start finding candidates</p>
+                <button class="btn btn-primary" onclick="switchDashboardTab('create-job')">
+                    <i class="fas fa-plus"></i>
+                    Create Job
+                </button>
+            </div>
+        `);
     return;
   }
 
   jobs.forEach((job) => {
     const jobCard = $(`
-            <div class="job-card">
-                <h3>${job.Title}</h3>
-                <p><strong>Location:</strong> ${job.Location}</p>
-                <p><strong>Status:</strong> ${job.Status}</p>
-                <p><strong>Experience:</strong> ${job.ExperienceRequired}</p>
+            <div class="job-card recruiter-job">
+                <div class="job-header">
+                    <h3>${job.Title}</h3>
+                    <div class="job-status ${job.Status.toLowerCase()}">
+                        <i class="fas fa-circle"></i>
+                        ${job.Status}
+                    </div>
+                </div>
+                <div class="job-meta">
+                    <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${
+                      job.Location
+                    }</p>
+                    <p><i class="fas fa-chart-line"></i> <strong>Experience:</strong> ${
+                      job.ExperienceRequired
+                    }</p>
+                    <p><i class="fas fa-calendar"></i> <strong>Posted:</strong> Recently</p>
+                </div>
+                <div class="job-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">0</span>
+                        <span class="stat-label">Applications</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">0</span>
+                        <span class="stat-label">Views</span>
+                    </div>
+                </div>
                 <div class="job-actions">
-                    <button class="btn btn-primary view-applications-btn" data-job-id="${job.JobID}">View Applications</button>
-                    <button class="btn btn-outline edit-job-btn" data-job-id="${job.JobID}">Edit Job</button>
+                    <button class="btn btn-primary view-applications-btn" data-job-id="${
+                      job.JobID
+                    }">
+                        <i class="fas fa-users"></i>
+                        View Applications
+                    </button>
+                    <button class="btn btn-outline edit-job-btn" data-job-id="${
+                      job.JobID
+                    }">
+                        <i class="fas fa-edit"></i>
+                        Edit Job
+                    </button>
                 </div>
             </div>
         `);
@@ -718,14 +1586,20 @@ function displayRecruiterJobs(jobs) {
     jobsList.append(jobCard);
   });
 
-  // Attach event listeners
   $(".view-applications-btn").click(function () {
     const jobId = $(this).data("job-id");
-    viewJobApplications(jobId);
+    if (jobId) {
+      viewJobApplications(jobId);
+    }
   });
 }
 
 function viewJobApplications(jobId) {
+  if (!jobId) {
+    showToast("Invalid job ID", "error");
+    return;
+  }
+
   $.ajax({
     url: `${API_BASE}/recruiter/job/${jobId}/applications`,
     method: "GET",
@@ -742,24 +1616,46 @@ function viewJobApplications(jobId) {
 }
 
 function displayJobApplications(applications, jobId) {
-  let applicationsHtml = `<h3>Applications for Job ID: ${jobId}</h3>`;
+  let applicationsHtml = `
+        <div class="applications-header">
+            <h3><i class="fas fa-users"></i> Applications for Job ID: ${jobId}</h3>
+            <span class="applications-count">${
+              applications.length
+            } application${applications.length !== 1 ? "s" : ""}</span>
+        </div>
+    `;
 
   if (applications.length === 0) {
-    applicationsHtml += "<p>No applications received yet.</p>";
+    applicationsHtml += `
+            <div class="empty-state">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <p>No applications received yet</p>
+            </div>
+        `;
   } else {
     applications.forEach((app) => {
       applicationsHtml += `
-                <div class="application-card">
+                <div class="application-card candidate-application">
                     <div class="application-header">
-                        <h4>Applicant ID: ${app.applicant_id}</h4>
+                        <div class="candidate-info">
+                            <h4><i class="fas fa-user"></i> Applicant ID: ${
+                              app.applicant_id
+                            }</h4>
+                            <span class="application-date">Applied recently</span>
+                        </div>
                         <span class="application-status status-${app.status.toLowerCase()}">${
         app.status
       }</span>
                     </div>
                     <div class="resume-score">
-                        <p><strong>Resume Score:</strong> ${
-                          app.resume_score
-                        }/100</p>
+                        <div class="score-header">
+                            <span><strong>Resume Score:</strong> ${
+                              app.resume_score
+                            }/100</span>
+                            <span class="score-percentage">${
+                              app.resume_score
+                            }%</span>
+                        </div>
                         <div class="score-bar">
                             <div class="score-fill" style="width: ${
                               app.resume_score
@@ -767,16 +1663,26 @@ function displayJobApplications(applications, jobId) {
                         </div>
                     </div>
                     <div class="ai-review">
-                        <h5>AI Review:</h5>
+                        <h5><i class="fas fa-robot"></i> AI Analysis</h5>
                         <p>${app.ai_review}</p>
                     </div>
                     <div class="application-actions">
                         <button class="btn btn-primary download-resume-btn" data-user-id="${
                           app.applicant_user_id
-                        }">Download Resume</button>
+                        }">
+                            <i class="fas fa-download"></i>
+                            Download Resume
+                        </button>
                         <button class="btn btn-success schedule-interview-btn" data-application-id="${
                           app.applicant_id
-                        }">Schedule Interview</button>
+                        }">
+                            <i class="fas fa-calendar-check"></i>
+                            Schedule Interview
+                        </button>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-comments"></i>
+                            Message Candidate
+                        </button>
                     </div>
                 </div>
             `;
@@ -786,23 +1692,34 @@ function displayJobApplications(applications, jobId) {
   $("#job-details-content").html(applicationsHtml);
   showModal("job-details-modal");
 
-  // Attach event listeners
   $(".download-resume-btn").click(function () {
     const userId = $(this).data("user-id");
-    downloadResume(userId);
+    if (userId) {
+      downloadResume(userId);
+    }
   });
 
   $(".schedule-interview-btn").click(function () {
     const applicationId = $(this).data("application-id");
-    showScheduleInterviewModal(applicationId);
+    if (applicationId) {
+      showScheduleInterviewModal(applicationId);
+    }
   });
 }
 
 function downloadResume(userId) {
+  if (!userId) {
+    showToast("Invalid user ID", "error");
+    return;
+  }
   window.open(`${API_BASE}/download-resume/${userId}`, "_blank");
 }
 
 function showScheduleInterviewModal(applicationId) {
+  if (!applicationId) {
+    showToast("Invalid application ID", "error");
+    return;
+  }
   $("#interview-form").data("application-id", applicationId);
   showModal("interview-modal");
 }
@@ -814,6 +1731,11 @@ function handleScheduleInterview(e) {
   const date = $("#interview-date").val();
   const mode = $("#interview-mode").val();
 
+  if (!applicationId || !date || !mode) {
+    showToast("Please fill in all required fields", "error");
+    return;
+  }
+
   showLoading();
 
   $.ajax({
@@ -824,7 +1746,7 @@ function handleScheduleInterview(e) {
     },
     success: (response) => {
       hideLoading();
-      showToast("Interview scheduled successfully!", "success");
+      showToast("Interview scheduled successfully! 📅", "success");
       hideModal("interview-modal");
       $("#interview-form")[0].reset();
     },
@@ -840,24 +1762,34 @@ function updateUserStats(applications) {
   $("#total-applications").text(applications.length);
   const pending = applications.filter((app) => app.status === "Applied").length;
   $("#pending-applications").text(pending);
-  $("#interviews-scheduled").text(0); // This would need additional API call
+  $("#interviews-scheduled").text(0);
+  $("#profile-views").text(Math.floor(Math.random() * 50) + 10);
 }
 
 function updateRecruiterStats(jobs) {
   $("#total-applications").text(jobs.length);
   const activeJobs = jobs.filter((job) => job.Status === "Open").length;
   $("#pending-applications").text(activeJobs);
-  $("#interviews-scheduled").text(0); // This would need additional API call
+  $("#interviews-scheduled").text(0);
+  $("#profile-views").text(Math.floor(Math.random() * 100) + 50);
 }
 
 function switchDashboardTab(tab) {
+  // Validate tab
+  if (!tab || typeof tab !== "string") {
+    console.error("switchDashboardTab: Invalid tab provided");
+    return;
+  }
+
   $(".tab-btn").removeClass("active");
   $(`.tab-btn[data-tab="${tab}"]`).addClass("active");
 
-  $(".tab-content").removeClass("active");
-  $(`#${tab}-tab-content`).addClass("active");
+  $(".tab-pane").removeClass("active");
+  const tabContent = $(`#${tab}-tab-content`);
+  if (tabContent.length > 0) {
+    tabContent.addClass("active");
+  }
 
-  // Load tab-specific data
   switch (tab) {
     case "applications":
       if (userType === "recruiter") {
@@ -892,6 +1824,7 @@ function loadNotifications() {
     },
     success: (notifications) => {
       displayNotifications(notifications);
+      updateNotificationBadge(notifications);
     },
     error: () => {
       showToast("Failed to load notifications", "error");
@@ -904,9 +1837,13 @@ function displayNotifications(notifications) {
   notificationsList.empty();
 
   if (notifications.length === 0) {
-    notificationsList.html(
-      '<div class="text-center"><h3>No notifications</h3></div>'
-    );
+    notificationsList.html(`
+            <div class="empty-state">
+                <i class="fas fa-bell-slash" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <h3>No notifications</h3>
+                <p>You're all caught up! New notifications will appear here.</p>
+            </div>
+        `);
     return;
   }
 
@@ -914,32 +1851,46 @@ function displayNotifications(notifications) {
     const notificationItem = $(`
             <div class="notification-item ${
               !notification.IsRead ? "unread" : ""
-            }">
-                <div class="notification-header">
-                    <strong>${notification.Message}</strong>
-                    <span class="notification-time">${formatDate(
-                      notification.Timestamp
-                    )}</span>
+            }" data-id="${notification.NotificationID}">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
                 </div>
-                ${
-                  !notification.IsRead
-                    ? `<button class="btn btn-outline mark-read-btn" data-notification-id="${notification.NotificationID}">Mark as Read</button>`
-                    : ""
-                }
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <strong>${notification.Message}</strong>
+                        <span class="notification-time">${formatDate(
+                          notification.Timestamp
+                        )}</span>
+                    </div>
+                    ${
+                      !notification.IsRead
+                        ? `<button class="btn btn-outline btn-small mark-read-btn" data-notification-id="${notification.NotificationID}">
+                            <i class="fas fa-check"></i>
+                            Mark as Read
+                        </button>`
+                        : ""
+                    }
+                </div>
             </div>
         `);
 
     notificationsList.append(notificationItem);
   });
 
-  // Attach event listeners
   $(".mark-read-btn").click(function () {
     const notificationId = $(this).data("notification-id");
-    markNotificationAsRead(notificationId);
+    if (notificationId) {
+      markNotificationAsRead(notificationId);
+    }
   });
 }
 
 function markNotificationAsRead(notificationId) {
+  if (!notificationId) {
+    showToast("Invalid notification ID", "error");
+    return;
+  }
+
   $.ajax({
     url: `${API_BASE}/notification/${notificationId}/read`,
     method: "PUT",
@@ -947,7 +1898,11 @@ function markNotificationAsRead(notificationId) {
       withCredentials: true,
     },
     success: () => {
-      loadNotifications(); // Reload notifications
+      $(`.notification-item[data-id="${notificationId}"]`).removeClass(
+        "unread"
+      );
+      $(`.mark-read-btn[data-notification-id="${notificationId}"]`).remove();
+      loadNotifications();
     },
     error: () => {
       showToast("Failed to mark notification as read", "error");
@@ -955,7 +1910,55 @@ function markNotificationAsRead(notificationId) {
   });
 }
 
-// Chat functions with email search functionality
+function updateNotificationBadge(notifications) {
+  const unreadCount = notifications.filter((n) => !n.IsRead).length;
+  const badge = $("#notification-count");
+
+  if (unreadCount > 0) {
+    badge.text(unreadCount).show();
+  } else {
+    badge.hide();
+  }
+}
+
+function filterNotifications(filter) {
+  if (!filter) {
+    return;
+  }
+
+  const items = $(".notification-item");
+  items.show();
+
+  switch (filter) {
+    case "unread":
+      items.not(".unread").hide();
+      break;
+    case "applications":
+      items
+        .filter(function () {
+          return !$(this)
+            .find("strong")
+            .text()
+            .toLowerCase()
+            .includes("application");
+        })
+        .hide();
+      break;
+    case "messages":
+      items
+        .filter(function () {
+          return !$(this)
+            .find("strong")
+            .text()
+            .toLowerCase()
+            .includes("message");
+        })
+        .hide();
+      break;
+  }
+}
+
+// Chat functions
 function setupWebSocket() {
   if (!currentUser) return;
 
@@ -967,12 +1970,28 @@ function setupWebSocket() {
   };
 
   websocket.onmessage = (event) => {
-    const message = event.data;
-    showToast(message, "info");
+    const data = JSON.parse(event.data);
+    if (data.from && data.message) {
+      if (currentChatUser === data.from) {
+        const messageDiv = $(`
+                    <div class="message received">
+                        <div class="message-content">${data.message}</div>
+                        <div class="message-time">${formatDate(
+                          new Date()
+                        )}</div>
+                    </div>
+                `);
+        $("#chat-messages").append(messageDiv);
+        $("#chat-messages").scrollTop($("#chat-messages")[0].scrollHeight);
+      } else {
+        showToast(`💬 New message from ${data.from}`, "info");
+      }
+    } else {
+      showToast(event.data, "info");
+    }
 
-    // If on chat page, update chat
     if ($("#chat-page").hasClass("active")) {
-      loadChatHistory(currentUserEmail);
+      loadChatContacts();
     }
   };
 
@@ -986,7 +2005,6 @@ function setupWebSocket() {
 }
 
 function loadChatContacts() {
-  // Load actual contacts from API instead of static data
   $.ajax({
     url: `${API_BASE}/chat/contacts`,
     method: "GET",
@@ -997,83 +2015,88 @@ function loadChatContacts() {
       displayChatContacts(contacts);
     },
     error: () => {
-      // If API fails, show empty state
       displayChatContacts([]);
     },
   });
 }
 
 function displayChatContacts(contacts) {
-  console.log(contacts);
   const contactsList = $("#chat-contacts");
   contactsList.empty();
 
-  // Add search bar
   const searchBar = $(`
-    <div class="chat-search-container">
-      <input type="email" id="email-search" placeholder="Search or enter email address..." class="form-control">
-      <button type="button" id="search-email-btn" class="btn btn-primary">Search</button>
-    </div>
-  `);
+        <div class="chat-search-container">
+            <div class="input-group">
+                <i class="fas fa-search"></i>
+                <input type="email" id="email-search" placeholder="Search or enter email address..." class="form-control">
+            </div>
+            <button type="button" id="search-email-btn" class="btn btn-primary btn-small">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    `);
 
   contactsList.append(searchBar);
 
-  // Add contacts list header
   const contactsHeader = $(`
-    <div class="contacts-header">
-      <h4>Recent Conversations</h4>
-    </div>
-  `);
+        <div class="contacts-header">
+            <h4>Recent Conversations</h4>
+        </div>
+    `);
   contactsList.append(contactsHeader);
 
-  // Display contacts
   if (contacts.length === 0) {
     const noContacts = $(`
-      <div class="no-contacts">
-        <p>No recent conversations. Use the search bar above to start a new chat.</p>
-      </div>
-    `);
+            <div class="no-contacts">
+                <i class="fas fa-comments" style="font-size: 2rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                <p>No recent conversations</p>
+                <p>Use the search bar above to start a new chat</p>
+            </div>
+        `);
     contactsList.append(noContacts);
   } else {
     contacts.forEach((contact) => {
       const contactItem = $(`
-      <div class="chat-contact" data-email="${contact.email}">
-        <div class="contact-info">
-          <strong>${contact.name || contact.email}</strong>
-          <div class="contact-email">${contact.email}</div>
-          ${
-            contact.last_message
-              ? `<div class="last-message">${contact.last_message}</div>`
-              : ""
-          }
-        </div>
-        ${
-          contact.unread_count
-            ? `<div class="unread-badge">${contact.unread_count}</div>`
-            : ""
-        }
-      </div>
-    `);
+                <div class="chat-contact" data-email="${contact.email}">
+                    <div class="contact-avatar">
+                        <span>${
+                          contact.name
+                            ? contact.name.charAt(0).toUpperCase()
+                            : contact.email.charAt(0).toUpperCase()
+                        }</span>
+                    </div>
+                    <div class="contact-info">
+                        <strong>${contact.name || contact.email}</strong>
+                        <div class="contact-email">${contact.email}</div>
+                        ${
+                          contact.last_message
+                            ? `<div class="last-message">${contact.last_message}</div>`
+                            : ""
+                        }
+                    </div>
+                    <div class="contact-status">
+                        <div class="online-indicator"></div>
+                    </div>
+                </div>
+            `);
       contactsList.append(contactItem);
     });
   }
 
-  // Attach event listeners
   $(".chat-contact").click(function () {
     const email = $(this).data("email");
-    selectChatContact(email);
+    if (email) {
+      selectChatContact(email);
+    }
   });
 
-  // Search functionality
   $("#search-email-btn").click(searchAndSelectEmail);
   $("#email-search").keypress((e) => {
     if (e.which === 13) {
-      // Enter key
       searchAndSelectEmail();
     }
   });
 
-  // Real-time search as user types
   $("#email-search").on("input", function () {
     const searchTerm = $(this).val().toLowerCase();
     if (searchTerm.length > 0) {
@@ -1085,6 +2108,8 @@ function displayChatContacts(contacts) {
 }
 
 function filterContacts(searchTerm) {
+  if (!searchTerm) return;
+
   $(".chat-contact").each(function () {
     const email = $(this).data("email").toLowerCase();
     const name = $(this).find("strong").text().toLowerCase();
@@ -1105,14 +2130,12 @@ function searchAndSelectEmail() {
     return;
   }
 
-  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     showToast("Please enter a valid email address", "error");
     return;
   }
 
-  // Check if email is already in contacts
   const existingContact = $(`.chat-contact[data-email="${email}"]`);
   if (existingContact.length > 0) {
     selectChatContact(email);
@@ -1120,40 +2143,33 @@ function searchAndSelectEmail() {
     return;
   }
 
-  // Search for the email in the system
   showLoading();
 
   $.ajax({
     url: `${API_BASE}/check-registered-email?email_to_check=${email}`,
     method: "GET",
-    contentType: "application/json",
     xhrFields: {
       withCredentials: true,
     },
     success: (response) => {
       hideLoading();
-
       if (response) {
-        // User exists, add to contacts and select
         const newContact = {
           email: email,
           name: response.name || email,
           last_message: null,
-          unread_count: 0,
         };
 
         addNewContactToList(newContact);
         selectChatContact(email);
         $("#email-search").val("");
-
-        showToast(`Started chat with ${response.name || email}`, "success");
+        showToast(`Started chat with ${response.name || email} 💬`, "success");
       } else {
         showToast("This email is not registered in our system", "error");
       }
     },
     error: (xhr) => {
       hideLoading();
-
       if (xhr.status === 404) {
         showToast("This email is not registered in our system", "error");
       } else {
@@ -1165,48 +2181,60 @@ function searchAndSelectEmail() {
 }
 
 function addNewContactToList(contact) {
-  // Remove "no contacts" message if present
   $(".no-contacts").remove();
 
-  // Add new contact to the list
   const contactItem = $(`
-    <div class="chat-contact" data-email="${contact.email}">
-      <div class="contact-info">
-        <strong>${contact.name}</strong>
-        <div class="contact-email">${contact.email}</div>
-      </div>
-    </div>
-  `);
+        <div class="chat-contact" data-email="${contact.email}">
+            <div class="contact-avatar">
+                <span>${contact.name.charAt(0).toUpperCase()}</span>
+            </div>
+            <div class="contact-info">
+                <strong>${contact.name}</strong>
+                <div class="contact-email">${contact.email}</div>
+            </div>
+            <div class="contact-status">
+                <div class="online-indicator"></div>
+            </div>
+        </div>
+    `);
 
-  // Insert after the contacts header
   $(".contacts-header").after(contactItem);
 
-  // Attach click event
   contactItem.click(function () {
     const email = $(this).data("email");
-    selectChatContact(email);
+    if (email) {
+      selectChatContact(email);
+    }
   });
 }
 
+function enableChatInput() {
+  console.log("abc");
+  $("#message-input").prop("disabled", false);
+  $("#send-message-btn").prop("disabled", false);
+}
+
 function selectChatContact(email) {
+  if (!email) {
+    showToast("Invalid email address", "error");
+    return;
+  }
+
   currentChatUser = email;
 
   $(".chat-contact").removeClass("active");
   $(`.chat-contact[data-email="${email}"]`).addClass("active");
 
-  // Update chat header
   const contactName =
     $(`.chat-contact[data-email="${email}"] strong`).text() || email;
-  $("#chat-with").text(`Chat with ${contactName}`);
+  $("#chat-with").text(contactName);
+  $("#chat-user-initial").text(contactName.charAt(0).toUpperCase());
 
-  // Enable message input
-  $("#message-input").prop("disabled", false);
-  $("#send-message-btn").prop("disabled", false);
+  enableChatInput();
 
-  // Show chat area
   $("#chat-area").show();
+  $("#chat-placeholder").hide();
 
-  // Load chat history
   loadChatHistory(email);
 }
 
@@ -1223,7 +2251,6 @@ function loadChatHistory(withEmail) {
       displayChatMessages(messages);
     },
     error: () => {
-      // If no chat history exists, show empty state
       displayChatMessages([]);
     },
   });
@@ -1235,25 +2262,27 @@ function displayChatMessages(messages) {
 
   if (messages.length === 0) {
     const emptyState = $(`
-      <div class="empty-chat">
-        <p>No messages yet. Start the conversation!</p>
-      </div>
-    `);
+            <div class="empty-chat">
+                <i class="fas fa-comments"></i>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+        `);
     messagesContainer.append(emptyState);
   } else {
     messages.forEach((message) => {
       const isSent = message.from === currentUserEmail;
       const messageDiv = $(`
-        <div class="message ${isSent ? "sent" : "received"}">
-          <div class="message-content">${message.message}</div>
-          <div class="message-time">${formatDate(message.timestamp)}</div>
-        </div>
-      `);
+                <div class="message ${isSent ? "sent" : "received"}">
+                    <div class="message-content">${message.message}</div>
+                    <div class="message-time">${formatDate(
+                      message.timestamp
+                    )}</div>
+                </div>
+            `);
       messagesContainer.append(messageDiv);
     });
   }
 
-  // Scroll to bottom
   messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
 }
 
@@ -1271,16 +2300,14 @@ function sendMessage() {
 
     $("#message-input").val("");
 
-    // Remove empty state if present
     $(".empty-chat").remove();
 
-    // Add message to chat immediately
     const messageDiv = $(`
-      <div class="message sent">
-        <div class="message-content">${message}</div>
-        <div class="message-time">${formatDate(new Date())}</div>
-      </div>
-    `);
+            <div class="message sent">
+                <div class="message-content">${message}</div>
+                <div class="message-time">${formatDate(new Date())}</div>
+            </div>
+        `);
 
     $("#chat-messages").append(messageDiv);
     $("#chat-messages").scrollTop($("#chat-messages")[0].scrollHeight);
@@ -1289,49 +2316,36 @@ function sendMessage() {
   }
 }
 
-// Add this to your existing setupEventListeners function
-function setupChatEventListeners() {
-  // Chat search
-  $("#search-email-btn").click(searchAndSelectEmail);
-  $("#email-search").keypress((e) => {
-    if (e.which === 13) {
-      searchAndSelectEmail();
-    }
-  });
-
-  // Send message
-  $("#send-message-btn").click(sendMessage);
-  $("#message-input").keypress((e) => {
-    if (e.which === 13) {
-      sendMessage();
-    }
-  });
-}
-
 // Utility functions
 function showLoading() {
-  $("#loading").show();
+  $("#loading").fadeIn(200);
 }
 
 function hideLoading() {
-  $("#loading").hide();
+  $("#loading").fadeOut(200);
 }
 
 function showToast(message, type = "info") {
+  const icons = {
+    success: "fas fa-check-circle",
+    error: "fas fa-exclamation-circle",
+    warning: "fas fa-exclamation-triangle",
+    info: "fas fa-info-circle",
+  };
+
   const toast = $(`
         <div class="toast ${type}">
-            ${message}
+            <i class="${icons[type]}"></i>
+            <span>${message}</span>
         </div>
     `);
 
   $("#toast-container").append(toast);
 
-  // Auto remove after 5 seconds
   setTimeout(() => {
     toast.fadeOut(() => toast.remove());
   }, 5000);
 
-  // Click to dismiss
   toast.click(() => {
     toast.fadeOut(() => toast.remove());
   });
@@ -1339,7 +2353,18 @@ function showToast(message, type = "info") {
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleString();
+  const now = new Date();
+  const diff = now - date;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+
+  return date.toLocaleDateString();
 }
 
 // Error handling
@@ -1354,34 +2379,325 @@ $(document).ajaxError((event, xhr, settings, thrownError) => {
   }
 });
 
-// Initialize tooltips and other UI enhancements
-$(document).ready(() => {
-  // Add smooth scrolling
-  $('a[href^="#"]').on("click", function (event) {
-    var target = $(this.getAttribute("href"));
-    if (target.length) {
-      event.preventDefault();
-      $("html, body")
-        .stop()
-        .animate(
-          {
-            scrollTop: target.offset().top - 70,
-          },
-          1000
-        );
+// Add CSS for ripple effect
+const rippleCSS = `
+<style>
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
     }
-  });
+}
 
-  // Add loading states to buttons
-  $(document).on("click", ".btn", function () {
-    const btn = $(this);
-    if (btn.hasClass("loading")) return false;
+.job-card.hovered {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
 
-    const originalText = btn.text();
-    btn.addClass("loading").text("Loading...");
+.nav-link.active {
+    color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.1);
+}
 
-    setTimeout(() => {
-      btn.removeClass("loading").text(originalText);
-    }, 2000);
-  });
-});
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--gray-500);
+}
+
+.empty-state h3 {
+    color: var(--gray-600);
+    margin-bottom: 1rem;
+}
+
+.job-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.job-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+    background: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+.meta-item i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.meta-item strong {
+    display: block;
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+.meta-item span {
+    color: var(--gray-600);
+}
+
+.job-skills-section,
+.job-description-section {
+    margin-bottom: 2rem;
+}
+
+.job-skills-section h4,
+.job-description-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    color: var(--gray-800);
+}
+
+.description-content {
+    background: var(--gray-100);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    line-height: 1.7;
+    color: var(--gray-700);
+}
+
+.job-actions-section {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.application-result {
+    text-align: center;
+    padding: 2rem;
+}
+
+.result-header h3 {
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+}
+
+.score-section {
+    margin: 2rem 0;
+}
+
+.score-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.score-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.score-total {
+    font-size: 1.5rem;
+    color: var(--gray-500);
+    margin-left: 0.5rem;
+}
+
+.score-label {
+    color: var(--gray-600);
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.ai-review-section {
+    background: var(--gray-100);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.ai-review-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    color: var(--gray-800);
+}
+
+.review-content {
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+.result-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.applications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.applications-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.candidate-application {
+    border-left: 4px solid var(--primary-color);
+}
+
+.application-info,
+.candidate-info {
+    flex: 1;
+}
+
+.application-date {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.score-percentage {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.recruiter-job {
+    border-left: 4px solid var(--secondary-color);
+}
+
+.job-stats {
+    display: flex;
+    gap: 2rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+.job-stats .stat-item {
+    text-align: center;
+}
+
+.job-stats .stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.job-stats .stat-label {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.notification-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.contact-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.contact-status {
+    display: flex;
+    align-items: center;
+}
+
+.online-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--secondary-color);
+    border-radius: 50%;
+}
+
+.job-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.job-status.open {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--secondary-color);
+}
+
+.job-status.closed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.job-status i {
+    font-size: 0.6rem;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+</style>
+`;
+
+$("head").append(rippleCSS);

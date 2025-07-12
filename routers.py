@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Response, Request, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from models import User, OTPStore, Recruiter, Job, Application, Interview, Notification, ChatMessage
-from schemas import UserLogin, RecruiterCreate, JobCreate
+<<<<<<< HEAD
+from schemas import RecruiterReturn, UserLogin, RecruiterCreate, JobCreate, UpdateRequest, UserReturn
+=======
+from schemas import UserLogin, RecruiterCreate, JobCreate, UserUpdate
+>>>>>>> parent of 75908df (Update user data updation)
 from database import get_db, get_db_sync
 from starlette import status
 from utils import mail_sender, extract_text_from_pdf, score_resume_against_job, check_who_loged_in, notification_sender, create_notification, check_user_type
@@ -116,6 +120,101 @@ def protected_route(request: Request, db: Session= Depends(get_db)):
     return {"user": payload,
             "user_email": payload.get("email"),
             "user_type": user_type}
+
+@router.get("/current-user-data")
+def get_current_user_data(email: str =Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user = db.query(User).filter(User.Email == email).first()
+    if user:
+        return user
+    recruiter = db.query(Recruiter).filter(Recruiter.Email == email).first()
+    if recruiter:
+<<<<<<< HEAD
+        return RecruiterReturn(
+            Name = recruiter.Name,
+            Email = recruiter.Email,
+            Company = recruiter.Company,
+            Phone = recruiter.Phone
+        )
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+
+@router.patch("/update-your-details")
+def update_your_details(updated_data: UpdateRequest = Body(..., embed = True), email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+        if updated_data.name: curr_user.Name = updated_data.name
+        if updated_data.phone: curr_user.Phone = updated_data.phone
+        if updated_data.email: curr_user.Email = updated_data.email
+        if updated_data.skills: curr_user.Skills = updated_data.skills
+        if updated_data.experience: curr_user.Experience = updated_data.experience
+        if updated_data.education: curr_user.Education = updated_data.education
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+        if updated_data.name: curr_user.Name = updated_data.name
+        if updated_data.email: curr_user.Email = updated_data.email
+        if updated_data.company: curr_user.Company = updated_data.company
+        if updated_data.phone: curr_user.Phone = updated_data.phone
+=======
+        return recruiter
+    raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+
+@router.patch("/update-your-details")
+def update_your_details(updated_data: UserUpdate, email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+>>>>>>> parent of 75908df (Update user data updation)
+    else:
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+    if updated_data.name is not None:
+        curr_user.Name = updated_data.name
+    if updated_data.phone is not None:
+        curr_user.Phone = updated_data.phone
+    if updated_data.skills is not None:
+        curr_user.Skills = updated_data.skills
+    if updated_data.experience is not None:
+        curr_user.Experience = updated_data.experience
+    if updated_data.education is not None:
+        curr_user.Education = updated_data.education
+    db.commit()
+    db.refresh(curr_user)
+    return {"message": "User details updated successfully."}
+
+@router.patch("/update-resume")
+async def update_resume(new_resume: UploadFile = File(...), email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "recruiter":
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "You are recruiter, not candidate.")
+    user = db.query(User).filter(User.Email == email).first()
+    resume_data = await new_resume.read()
+    user.Resume = resume_data
+    db.commit()
+    db.refresh(user)
+    return {"message": "Resume updated successfully."}
+
+@router.delete("/delete-account")
+def delete_account(email: str= Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    user_type = check_user_type(email= email, db= db)
+    if user_type == "user":
+        curr_user = db.query(User).filter(User.Email == email).first()
+        if not curr_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        db.delete(curr_user)
+
+    elif user_type == "recruiter":
+        curr_user = db.query(Recruiter).filter(Recruiter.Email == email).first()
+        if not curr_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        db.delete(curr_user)
+    else:
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= "Login first.")
+    db.commit()
+    response = JSONResponse(content= {"message": f"Account with email {email} deleted successfully."})
+    response.delete_cookie(key= "access_token")
+    return response
+
 
 @router.post("/logout")
 def logout(response: Response):
@@ -454,21 +553,38 @@ def get_chat_contacts(user_email: str = Depends(check_who_loged_in), db: Session
             )
         ).order_by(desc(ChatMessage.Timestamp)).first()
 
-        # Count unread messages from contact
-        unread_count = db.query(func.count()).filter(
-            ChatMessage.SenderEmail == contact_email,
-            ChatMessage.ReceiverEmail == user_email,
-            ChatMessage.is_read == False  
-        ).scalar()
-
         result.append({
             "email": contact_email,
             "name": user.Name if user else None,
             "last_message": last_msg.Message if last_msg else None,
-            "unread_count": unread_count or 0
         })
-
     return result
+
+@router.get("/count-unread-messages")
+def count_unread_messages(friend_email: str ,user_email: str = Depends(check_who_loged_in), db: Session= Depends(get_db)):
+    messages = db.query(ChatMessage).filter(
+        (ChatMessage.SenderEmail == user_email) & (ChatMessage.ReceiverEmail == friend_email)
+    ).all()
+    if not messages:
+        return "Nothing in chat"
+    unread_count = 0
+    for mesg in messages:
+        if mesg.is_read == False:
+            unread_count += 1
+    return unread_count
+
+
+@router.patch("/mark_as_read")
+def mark_as_read(friend_email: str ,user_email: str = Depends(check_who_loged_in), db: Session = Depends(get_db)):
+    messages = db.query(ChatMessage).filter(
+        (ChatMessage.SenderEmail == user_email) & (ChatMessage.ReceiverEmail == friend_email)
+    ).all()
+    if not messages:
+        return "Nothing in chat"
+    for mesg in messages:
+        mesg.is_read = True
+    db.commit()
+    return "Marked read"
 
 
 @router.get("/check-registered-email")

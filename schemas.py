@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, Union
 from datetime import date
 
 class UserBase(BaseModel):
@@ -16,6 +16,32 @@ class UserRead(UserBase):
     model_config = ConfigDict(
         from_attributes = True
     )
+
+class UserUpdate(BaseModel):
+    name: Optional[str]
+<<<<<<< HEAD
+    email: Optional[EmailStr] = None
+=======
+    email: Optional[EmailStr]
+>>>>>>> parent of 75908df (Update user data updation)
+    phone: Optional[str]
+    skills: Optional[str]
+    experience: Optional[str]
+    education: Optional[str]
+<<<<<<< HEAD
+    resume: Optional[str] = None
+
+class UserReturn(BaseModel):
+    Name: Optional[str]
+    Email: Optional[EmailStr]
+    Phone: Optional[str]
+    Skills: Optional[str]
+    Experience: Optional[str]
+    Education: Optional[str]
+    Resume: Optional[str]
+=======
+>>>>>>> parent of 75908df (Update user data updation)
+
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -37,6 +63,24 @@ class RecruiterBase(BaseModel):
     company: str
     phone: str
 
+<<<<<<< HEAD
+class RecruiterReturn(BaseModel):
+    Name: Optional[str]
+    Email: Optional[EmailStr] = None
+    Company: Optional[str]
+    Phone: Optional[str]
+
+
+class RecruiterUpdate(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]
+    company: Optional[str]
+    phone: Optional[str]
+
+UpdateRequest = Union[UserUpdate, RecruiterUpdate]
+
+=======
+>>>>>>> parent of 75908df (Update user data updation)
 class RecruiterCreate(RecruiterBase):
     pass
     model_config = ConfigDict(
